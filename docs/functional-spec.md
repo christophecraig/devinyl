@@ -1,7 +1,7 @@
 # Devinyl — Functional Specification
 
 **Status:** Draft v0.3 — 2026-08-03
-**Name:** *Devinyl* (« devine » + vinyl), pending domain & trademark availability check (see §20, D-1).
+**Name:** _Devinyl_ (« devine » + vinyl), pending domain & trademark availability check (see §20, D-1).
 **Scope of this document:** functional requirements only. Technical architecture, platform stack, and monorepo decisions are deliberately out of scope and will be addressed in a separate technical design document.
 
 ---
@@ -22,39 +22,39 @@ Devinyl is a music quiz (blind test) application. Players listen to short music 
 
 ## 2. Glossary
 
-| Term | Definition |
-|---|---|
-| **Clip** | A short audio excerpt (~30 s) of a commercially released track, served from a music preview catalog. |
-| **Track** | A song with metadata: title, artist(s), album, artwork, release year, genre. |
-| **Quiz** | An ordered list of tracks (rounds) plus its settings (round count, guess target, answer mode, scoring mode). |
-| **Round** | One track being played and guessed within a game session. |
-| **Game session** | One play-through of a quiz by one player (v1) or a group (v2+). |
-| **Challenge** | A shareable instance of a quiz with its own mini-leaderboard, created by a player daring others to beat their score. |
-| **Daily quiz** | The official quiz of the day, identical for all players, with a global daily leaderboard. |
-| **Guest** | A player without an account, identified by a self-chosen nickname on their device. |
+| Term             | Definition                                                                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Clip**         | A short audio excerpt (~30 s) of a commercially released track, served from a music preview catalog.                 |
+| **Track**        | A song with metadata: title, artist(s), album, artwork, release year, genre.                                         |
+| **Quiz**         | An ordered list of tracks (rounds) plus its settings (round count, guess target, answer mode, scoring mode).         |
+| **Round**        | One track being played and guessed within a game session.                                                            |
+| **Game session** | One play-through of a quiz by one player (v1) or a group (v2+).                                                      |
+| **Challenge**    | A shareable instance of a quiz with its own mini-leaderboard, created by a player daring others to beat their score. |
+| **Daily quiz**   | The official quiz of the day, identical for all players, with a global daily leaderboard.                            |
+| **Guest**        | A player without an account, identified by a self-chosen nickname on their device.                                   |
 
 ---
 
 ## 3. Roles
 
-| Role | Description |
-|---|---|
-| **Guest** | Plays without an account. Has a nickname. Limited persistence (see §12). |
-| **Registered player** | Has an account. Gets saved quizzes, history, stats, friends, and leaderboard presence. |
-| **Quiz creator** | Any registered player, when building or generating a quiz. |
-| **App operator** (you) | Publishes official curated quizzes and the daily quiz. |
-| **Host** (v2) | The player running a live party or online room. |
+| Role                   | Description                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| **Guest**              | Plays without an account. Has a nickname. Limited persistence (see §12).               |
+| **Registered player**  | Has an account. Gets saved quizzes, history, stats, friends, and leaderboard presence. |
+| **Quiz creator**       | Any registered player, when building or generating a quiz.                             |
+| **App operator** (you) | Publishes official curated quizzes and the daily quiz.                                 |
+| **Host** (v2)          | The player running a live party or online room.                                        |
 
 ---
 
 ## 4. Release scope
 
-| Release | Contents |
-|---|---|
-| **V1** | Solo play · Daily quiz · Challenge links · Quiz creation (manual, auto-generated, official curated) · Optional accounts · Friends · Stats & leaderboards · FR/EN localization |
-| **V2** | Local party mode (host screen + phone controllers) |
-| **V3** | Online multiplayer rooms |
-| **Not planned / future ideas** | Teams, hints, user-uploaded audio, public quiz gallery, monetization, custom per-round question text, difficulty via clip-segment selection |
+| Release                        | Contents                                                                                                                                                                      |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **V1**                         | Solo play · Daily quiz · Challenge links · Quiz creation (manual, auto-generated, official curated) · Optional accounts · Friends · Stats & leaderboards · FR/EN localization |
+| **V2**                         | Local party mode (host screen + phone controllers)                                                                                                                            |
+| **V3**                         | Online multiplayer rooms                                                                                                                                                      |
+| **Not planned / future ideas** | Teams, hints, user-uploaded audio, public quiz gallery, monetization, custom per-round question text, difficulty via clip-segment selection                                   |
 
 Requirements below are tagged **[V1]**, **[V2]**, **[V3]** accordingly.
 
@@ -80,13 +80,13 @@ A quiz is created once and playable many times (solo, as a challenge, or later i
 - **QUIZ-1 [V1]** — A quiz has: a name, an ordered list of tracks, and settings (below). It belongs to its creator (or to the app, for official quizzes).
 - **QUIZ-2 [V1]** — **Number of rounds:** 5 to 50 tracks; default **10**. This is the only content-volume setting the creator controls.
 - **QUIZ-3 [V1]** — **Guess target**, configurable per quiz:
-  - *Title + artist* (default): each is validated and scored independently — a player can get one, the other, or both.
-  - *Title only.*
-  - *Artist only.*
+  - _Title + artist_ (default): each is validated and scored independently — a player can get one, the other, or both.
+  - _Title only._
+  - _Artist only._
 - **QUIZ-4 [V1]** — **Answer mode**, configurable per quiz:
-  - *Free text* (default): players type their answer(s); validated per §8.
-  - *Multiple choice:* players pick from 4 options per guess target; generated per §8.
-- **QUIZ-5 [V1]** — **Scoring mode**, configurable per quiz: *speed-based* (default) or *fixed* (see §9).
+  - _Free text_ (default): players type their answer(s); validated per §8.
+  - _Multiple choice:_ players pick from 4 options per guess target; generated per §8.
+- **QUIZ-5 [V1]** — **Scoring mode**, configurable per quiz: _speed-based_ (default) or _fixed_ (see §9).
 - **QUIZ-6 [V1]** — Round order is fixed at creation. Every player of a given quiz/challenge gets the same tracks in the same order (required for fair leaderboards).
 
 ---
@@ -110,7 +110,7 @@ The round flow is identical across all game modes.
 
 ### Free text
 
-- **ANS-1 [V1]** — When the guess target is *title + artist*, the player has two distinct inputs (title, artist) and may submit them independently, in any order, at any time during the clip. Each locks in when submitted.
+- **ANS-1 [V1]** — When the guess target is _title + artist_, the player has two distinct inputs (title, artist) and may submit them independently, in any order, at any time during the clip. Each locks in when submitted.
 - **ANS-2 [V1]** — Validation is **forgiving**. An answer is accepted despite: case differences, missing/extra accents and punctuation, leading articles ("The", "Le/La/Les"…), minor typos (small edit-distance tolerance scaled to answer length), and parenthetical suffixes in official titles ("(Remastered 2011)", "(feat. X)" — the core title is enough).
 - **ANS-3 [V1]** — For multi-artist tracks, naming the **primary artist** is sufficient. Featured artists are accepted but not required.
 - **ANS-4 [V1]** — An incorrect submission is rejected with immediate feedback, and the player may retry as long as the clip is still playing. Wrong attempts cost no points by themselves (the cost is time, under speed scoring).
@@ -150,7 +150,7 @@ Three ways quizzes come into existence:
 
 - **CREATE-5 [V1]** — Any player (guest included) can generate a quiz by combining filters: **decade/era**, **genre**, and/or **artist or theme** (free-text seed, e.g. "Daft Punk" or "movie soundtracks"). The app assembles a quiz of the requested length from catalog tracks matching the filters.
 - **CREATE-6 [V1]** — Generated quizzes use default settings unless changed, and can be played immediately. A registered player can **save** a generated quiz (it becomes theirs, shareable like a manual quiz); guests can only play it in the moment.
-- **CREATE-7 [V1]** — Regenerating with the same filters produces a *different* selection (variety), but a *saved* generated quiz is frozen — its track list never changes.
+- **CREATE-7 [V1]** — Regenerating with the same filters produces a _different_ selection (variety), but a _saved_ generated quiz is frozen — its track list never changes.
 
 ### Official quizzes
 
@@ -295,32 +295,32 @@ The daily loop is the product's central retention bet (DAILY-3, DAILY-4). It shi
 
 All open questions from draft v0.1 were resolved on 2026-08-03:
 
-| # | Question | Decision |
-|---|---|---|
-| OQ-1 | Product name | **Devinyl** (« devine » + vinyl). ⚠️ Remaining action **D-1**: verify domain & trademark availability before public use; fall back to another candidate if taken. |
-| OQ-2 | Daily quiz length | **5 rounds** (DAILY-1). |
-| OQ-3 | Shazam/lookup in async play | **Accepted in v1**, honor-based boards (FAIR-4). |
-| OQ-4 | Global ranking shape | **Weekly ladder**, Monday–Sunday, weekly reset (STAT-4). |
-| OQ-5 | Guests on the daily board | **Yes**, under profanity-filtered nicknames (FAIR-5). |
-| OQ-6 | French catalog coverage | **Go/no-go criterion**, validated first in the technical phase (MUS-8). |
-| OQ-7 | Connectivity during a quiz | **Pre-load all clips at session start** (MUS-7). |
+| #    | Question                    | Decision                                                                                                                                                          |
+| ---- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OQ-1 | Product name                | **Devinyl** (« devine » + vinyl). ⚠️ Remaining action **D-1**: verify domain & trademark availability before public use; fall back to another candidate if taken. |
+| OQ-2 | Daily quiz length           | **5 rounds** (DAILY-1).                                                                                                                                           |
+| OQ-3 | Shazam/lookup in async play | **Accepted in v1**, honor-based boards (FAIR-4).                                                                                                                  |
+| OQ-4 | Global ranking shape        | **Weekly ladder**, Monday–Sunday, weekly reset (STAT-4).                                                                                                          |
+| OQ-5 | Guests on the daily board   | **Yes**, under profanity-filtered nicknames (FAIR-5).                                                                                                             |
+| OQ-6 | French catalog coverage     | **Go/no-go criterion**, validated first in the technical phase (MUS-8).                                                                                           |
+| OQ-7 | Connectivity during a quiz  | **Pre-load all clips at session start** (MUS-7).                                                                                                                  |
 
 Resolved on 2026-08-03 during technical-spec reconciliation (draft v0.3):
 
-| # | Question | Decision |
-|---|---|---|
-| OQ-8 | Skipped round (dead clip) on leaderboards | **Validate availability at assembly**; a session with a skip completes but never scores (MUS-5, FAIR-6). Comparability of boards wins over saving the odd run. |
-| OQ-9 | Full pre-load vs. the 50-round ceiling | **Keep full pre-load at every length**; warn + confirm above 20 rounds (MUS-7). |
-| OQ-10 | Editing a quiz that already has challenge links | **Content edits locked** once challenged or scored; Duplicate instead (CREATE-3, CREATE-10). Replaces the earlier "editing resets the leaderboard" rule. |
-| OQ-11 | Guests clearing local storage to replay the daily | **Soft, fail-open network-level dedupe** (FAIR-7). |
-| OQ-12 | Guest scores when the guest signs up | **Re-attributed to the account**, boards and weekly ladder included (ACC-4). |
-| OQ-13 | Track artwork in link previews | **Never** — branded preview only; a spoiler in an unfurl defeats the quiz (SHARE-4). |
-| OQ-14 | Accessibility commitment | **WCAG 2.2 AA, enforced in CI** from Phase 1 (A11Y-1). |
-| OQ-15 | Players who can't play under time pressure | **Fixed mode is the accessible mode** (A11Y-4) plus an **extended-input** profile setting that forces it; speed-scored quizzes therefore carry a **second, untimed board** (A11Y-5). |
-| OQ-16 | Minimum age & consent basis | **13+ self-declared**, resting on a permanent no-ad-tech / no-profiling commitment (LEGAL-1/2). |
-| OQ-17 | ToS & privacy policy | **Required before launch**, FR+EN, written against the real data inventory (LEGAL-3). |
-| OQ-18 | Analytics | **Self-hosted, cookieless, aggregate only** + server-side funnel counters (MET-3). |
-| OQ-19 | v1 success bar | **Retention-first:** D7 ≥ 25 %, median streak ≥ 3 (MET-2). |
+| #     | Question                                          | Decision                                                                                                                                                                             |
+| ----- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| OQ-8  | Skipped round (dead clip) on leaderboards         | **Validate availability at assembly**; a session with a skip completes but never scores (MUS-5, FAIR-6). Comparability of boards wins over saving the odd run.                       |
+| OQ-9  | Full pre-load vs. the 50-round ceiling            | **Keep full pre-load at every length**; warn + confirm above 20 rounds (MUS-7).                                                                                                      |
+| OQ-10 | Editing a quiz that already has challenge links   | **Content edits locked** once challenged or scored; Duplicate instead (CREATE-3, CREATE-10). Replaces the earlier "editing resets the leaderboard" rule.                             |
+| OQ-11 | Guests clearing local storage to replay the daily | **Soft, fail-open network-level dedupe** (FAIR-7).                                                                                                                                   |
+| OQ-12 | Guest scores when the guest signs up              | **Re-attributed to the account**, boards and weekly ladder included (ACC-4).                                                                                                         |
+| OQ-13 | Track artwork in link previews                    | **Never** — branded preview only; a spoiler in an unfurl defeats the quiz (SHARE-4).                                                                                                 |
+| OQ-14 | Accessibility commitment                          | **WCAG 2.2 AA, enforced in CI** from Phase 1 (A11Y-1).                                                                                                                               |
+| OQ-15 | Players who can't play under time pressure        | **Fixed mode is the accessible mode** (A11Y-4) plus an **extended-input** profile setting that forces it; speed-scored quizzes therefore carry a **second, untimed board** (A11Y-5). |
+| OQ-16 | Minimum age & consent basis                       | **13+ self-declared**, resting on a permanent no-ad-tech / no-profiling commitment (LEGAL-1/2).                                                                                      |
+| OQ-17 | ToS & privacy policy                              | **Required before launch**, FR+EN, written against the real data inventory (LEGAL-3).                                                                                                |
+| OQ-18 | Analytics                                         | **Self-hosted, cookieless, aggregate only** + server-side funnel counters (MET-3).                                                                                                   |
+| OQ-19 | v1 success bar                                    | **Retention-first:** D7 ≥ 25 %, median streak ≥ 3 (MET-2).                                                                                                                           |
 
 ---
 
