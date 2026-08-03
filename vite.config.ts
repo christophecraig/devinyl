@@ -35,6 +35,25 @@ export default defineConfig({
 						'src/**/*.integration.{test,spec}.{js,ts}'
 					]
 				}
+			},
+			{
+				extends: './vite.config.ts',
+				test: {
+					// Runes tests (`*.svelte.test.ts`). They need the `sveltekit()`
+					// plugin to compile `.svelte.ts` modules, which the `unit` project's
+					// `exclude` above deliberately keeps out of a plain node run — so
+					// they get a project of their own rather than being silently
+					// skipped, which is what happened before this existed. A test file
+					// that never runs is worse than no test file at all.
+					//
+					// `environment: 'node'` suffices today: the only runes tests are
+					// state machines with no DOM. Testing actual `.svelte` components
+					// (1.24+) will need jsdom or vitest browser mode added here.
+					name: 'client',
+					environment: 'node',
+					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+					exclude: ['src/**/*.integration.{test,spec}.{js,ts}']
+				}
 			}
 		]
 	}
