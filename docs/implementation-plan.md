@@ -114,9 +114,9 @@ Free-tier budget sanity: Workers 100k req/day, D1 5M reads / 100k writes/day, 5 
 - [x] **1.25** Answer UI — multiple choice: 4 plaintext options per target from the manifest, per-session client-side shuffle, one final pick locks the target (ANS-6/7).
 - [x] **1.26** Offline resilience (§4): beacons/results queue in memory, flush with retry/backoff; failed finalize retried from `localStorage` on next visit; reveal never blocked by connectivity.
 - [x] **1.27** **Accessibility in the same commits as the flow it describes** (A11Y-2/3/6): `assertive` live region for countdown/clip start-end/accept-reject, `polite` for reveal + scoreboard; announcements queued to gaps between clips (reveal announced at clip end); deliberate focus moves at every transition; full keyboard operability; `prefers-reduced-motion` variants; no UI sound effects ever.
-- [ ] **1.28** Solo play route wiring (SOLO-1/2): generate → play → end summary; challenge/share actions stubbed until Phase 3.
+- [x] **1.28** Solo play route wiring (SOLO-1/2): generate → play → end summary; challenge/share actions stubbed until Phase 3.
 - [x] **1.29** Fixture MP3s (synthesized ~30 s tones committed to `e2e/fixtures/` — no copyrighted audio) + Deezer stub layer for tests (§17).
-- [ ] **1.30** E2E: guest generates a quiz → plays 10 rounds with typo'd guesses → scores → reveals → summary. Plus **keyboard-only full-quiz run** and live-region ordering assertions (§17). Axe gate on all routes in CI.
+- [x] **1.30** E2E: guest generates a quiz → plays 10 rounds with typo'd guesses → scores → reveals → summary. Plus **keyboard-only full-quiz run** and live-region ordering assertions (§17). Axe gate on all routes in CI.
 - [ ] **1.31 [USER]** Real-device smoke test on **iOS Safari** (autoplay unlock, decode, timing — §19 risk; any iPhone/iPad, borrow one if needed) and Android Chrome, against a PR preview URL. I prepare the build + written test script.
 
 **GATE 1:** a guest can generate and play a quiz end-to-end on a preview URL — offline-tolerant, playable blind (scripted screen-reader checks pass), iOS-verified. CI fully green.

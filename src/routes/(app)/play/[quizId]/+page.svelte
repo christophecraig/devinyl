@@ -443,16 +443,26 @@
 			{/if}
 		</section>
 	{:else if game.phase === 'reveal'}
-		{#if game.revealed}
-			<RoundReveal
-				pack={game.revealed}
-				result={game.results[game.results.length - 1]}
-				required={requiredTargets()}
-				scoringMode={manifest.effectiveScoringMode}
-				curveVersion={manifest.curveVersion}
-				onNext={() => game?.advance()}
-			/>
-		{/if}
+		<!--
+			A11Y-3: every phase gets its own `bind:this` target. Without one here the
+			phase `$effect` would call `focusFirst` on the *previous* phase's now-detached
+			section and quietly move focus nowhere — the reveal is the one transition a
+			screen-reader user most needs to land on, and it would have been the only
+			phase that skipped it. The wrapper sits outside the `{#if}` so the binding
+			exists even in the (unreachable) case where the pack failed to open.
+		-->
+		<section bind:this={phaseSectionEl} tabindex="-1">
+			{#if game.revealed}
+				<RoundReveal
+					pack={game.revealed}
+					result={game.results[game.results.length - 1]}
+					required={requiredTargets()}
+					scoringMode={manifest.effectiveScoringMode}
+					curveVersion={manifest.curveVersion}
+					onNext={() => game?.advance()}
+				/>
+			{/if}
+		</section>
 	{:else if game.phase === 'scoreboard'}
 		<section bind:this={phaseSectionEl} tabindex="-1" class="scoreboard">
 			<h1>Score so far</h1>
