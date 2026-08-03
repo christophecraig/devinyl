@@ -65,6 +65,8 @@ export interface IdentityBlockInput {
 	hasPriorScoredRun: boolean;
 	/** FAIR-7: a guest daily claim for this (day, ipHash) already belongs to a different guestId. */
 	guestDailyReplay: boolean;
+	/** ROUND-8: the session was swept as abandoned before this finalize arrived. */
+	wasAbandoned: boolean;
 }
 
 /**
@@ -78,6 +80,11 @@ export interface IdentityBlockInput {
 export function resolveIdentityBlock(input: IdentityBlockInput): ScoredBlockReason | null {
 	if (input.isCreator) return 'creator';
 	if (input.hasPriorScoredRun || input.guestDailyReplay) return 'replay';
+	// Last: 'creator' and 'replay' are facts about who the player is, and stay
+	// true no matter when they finalized. 'abandoned' is only about *when*, so
+	// it's the least informative of the three — it should never mask one of the
+	// others.
+	if (input.wasAbandoned) return 'abandoned';
 	return null;
 }
 
@@ -489,7 +496,9 @@ export async function finalizeSession(
 	const identityBlock = resolveIdentityBlock({
 		isCreator: isCreatorOfQuiz(input.player, quizRow, isOperator),
 		hasPriorScoredRun: priorScoredRun,
-		guestDailyReplay
+		guestDailyReplay,
+		// Read *before* the write below flips it to 'completed'.
+		wasAbandoned: session.status === 'abandoned'
 	});
 	const { scored, blockReason } = applyIdentityPrecedence(identityBlock, engineResult.blockReason);
 
@@ -497,6 +506,11 @@ export async function finalizeSession(
 	// `scored` is false — only board eligibility is at stake.
 	await persistRounds(db, session.id, engineResult.rounds, knownPositions);
 
+	// `status` becomes 'completed' even for a run swept as abandoned: the play
+	// really did finish, and losing that would leave a finalized session sitting
+	// in 'abandoned' for the sweep to keep reconsidering. The abandonment is not
+	// forgotten — it is recorded where it actually matters, in `blockReason`,
+	// which is what keeps the run off the boards.
 	await db
 		.update(gameSession)
 		.set({

@@ -167,6 +167,7 @@ describe('runJobs', () => {
 		const fakePlatform = {} as App.Platform;
 
 		await expect(runJobs('every-15-min', fakePlatform)).resolves.toBeUndefined();
+		await expect(runJobs('hourly', fakePlatform)).resolves.toBeUndefined();
 		await expect(runJobs('daily', fakePlatform)).resolves.toBeUndefined();
 	});
 
@@ -186,10 +187,28 @@ describe('runJobs', () => {
 		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		await expect(runJobs('every-15-min', {} as App.Platform)).resolves.toBeUndefined();
 
-		// All four jobs reported a failure rather than one throw taking the batch down,
-		// and none reached the point of writing.
-		expect(errorSpy).toHaveBeenCalledTimes(4);
+		// All three jobs reported a failure rather than one throw taking the batch
+		// down, and none reached the point of writing.
+		expect(errorSpy).toHaveBeenCalledTimes(3);
 		expect(throwingDb.update).not.toHaveBeenCalled();
+		expect(throwingDb.delete).not.toHaveBeenCalled();
+		errorSpy.mockRestore();
+	});
+
+	it('isolates a failing job in the hourly batch too', async () => {
+		const throwingDb = {
+			select: vi.fn(() => {
+				throw new Error('boom');
+			}),
+			update: vi.fn(),
+			delete: vi.fn()
+		};
+		vi.mocked(getDb).mockReturnValue(throwingDb as never);
+
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		await expect(runJobs('hourly', {} as App.Platform)).resolves.toBeUndefined();
+
+		expect(errorSpy).toHaveBeenCalledTimes(1);
 		expect(throwingDb.delete).not.toHaveBeenCalled();
 		errorSpy.mockRestore();
 	});

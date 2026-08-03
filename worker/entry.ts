@@ -53,6 +53,8 @@ function jobKindFor(cron: string): JobKind | null {
 	switch (cron) {
 		case '*/15 * * * *':
 			return 'every-15-min';
+		case '0 * * * *':
+			return 'hourly';
 		case '5 0 * * *':
 			return 'daily';
 		default:

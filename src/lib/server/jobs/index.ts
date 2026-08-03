@@ -29,7 +29,7 @@ import {
 	rateLimit
 } from '../db/schema.js';
 
-export type JobKind = 'every-15-min' | 'daily';
+export type JobKind = 'every-15-min' | 'hourly' | 'daily';
 
 /** Per-invocation cap — see the module comment. Every job below reads at most this many rows. */
 const BATCH_SIZE = 200;
@@ -50,10 +50,15 @@ const RATE_LIMIT_WINDOW_MARGIN_MS = 60 * 60 * 1000;
 
 /**
  * ROUND-8: sessions left `active` for 2 h are presumed abandoned — the
- * player closed the tab mid-quiz. Swept **out of `active`**, never scored
- * (per ROUND-8 and `loadActiveSession`'s check), so a late result/finalize
- * POST against one of these 409s instead of silently completing a run
- * nobody is there to see.
+ * player closed the tab mid-quiz. Swept **out of `active`**, so a late
+ * round-result POST 409s via `loadActiveSession` instead of extending a run
+ * nobody is there to play.
+ *
+ * Finalize is deliberately the exception: it accepts an abandoned session so
+ * the §4 offline-retry path can still return the player their score, and
+ * blocks it from the boards with `'abandoned'` instead (see
+ * `sessions/finalize.ts`). Sweeping is therefore not a hard discard — it is
+ * the point at which a run stops being playable and stops being scoreable.
  *
  * Bounded via select-then-update (rather than a single UPDATE ... LIMIT,
  * which SQLite/D1 doesn't support without a nonstandard compile flag) so
@@ -214,31 +219,42 @@ async function runOne(name: string, fn: () => Promise<number>): Promise<JobResul
 	}
 }
 
+/** One line per job, so `wrangler tail` shows what a tick actually did (§15). */
+function report(kind: JobKind, results: JobResult[]): void {
+	for (const result of results) {
+		if (result.ok) {
+			console.log(`[jobs:${kind}] ${result.name}: ${result.detail} row(s)`);
+		} else {
+			console.error(`[jobs:${kind}] ${result.name} failed: ${result.detail}`);
+		}
+	}
+}
+
 export async function runJobs(kind: JobKind, platform: App.Platform): Promise<void> {
 	switch (kind) {
 		case 'every-15-min': {
 			const db = getDb(platform);
 			const now = Date.now();
 
-			// The ephemeral-quiz sweep is spec'd hourly (§15) but running it on
-			// every 15-min tick is harmless, not just tolerated: it's idempotent
-			// (a quiz already deleted just yields zero leaves next time) and
-			// bounded by BATCH_SIZE like everything else here, so the only cost
-			// of the faster cadence is a few extra near-empty queries.
 			const results = await Promise.all([
 				runOne('sweep-abandoned-sessions', () => sweepAbandonedSessions(db, now)),
-				runOne('sweep-ephemeral-quizzes', () => sweepEphemeralQuizzes(db, now)),
 				runOne('purge-daily-guest-claims', () => purgeDailyGuestClaims(db, now)),
 				runOne('purge-rate-limit-windows', () => purgeRateLimitWindows(db, now))
 			]);
 
-			for (const result of results) {
-				if (result.ok) {
-					console.log(`[jobs:every-15-min] ${result.name}: ${result.detail} row(s)`);
-				} else {
-					console.error(`[jobs:every-15-min] ${result.name} failed: ${result.detail}`);
-				}
-			}
+			report(kind, results);
+			return;
+		}
+		case 'hourly': {
+			const db = getDb(platform);
+			// The ephemeral-quiz sweep is the only job here that deletes rows a
+			// player might still be about to use, so it runs at its spec'd hourly
+			// cadence (§15) rather than riding the 15-min tick.
+			const results = [
+				await runOne('sweep-ephemeral-quizzes', () => sweepEphemeralQuizzes(db, Date.now()))
+			];
+
+			report(kind, results);
 			return;
 		}
 		case 'daily':

@@ -192,7 +192,25 @@ export type SessionStatus = 'active' | 'completed' | 'abandoned';
  * "couldn't be verified" (FAIR-4 posture).
  */
 export type ScoredBlockReason =
-	'replay' | 'creator' | 'clip_unavailable' | 'unverified_timing' | 'implausible';
+	| 'replay'
+	| 'creator'
+	| 'clip_unavailable'
+	| 'unverified_timing'
+	| 'implausible'
+	/**
+	 * ROUND-8: the run sat `active` past the 2 h sweep and was presumed
+	 * abandoned, but a finalize arrived for it anyway — the §4 "retry from
+	 * localStorage on next visit" path, which can legitimately land days later.
+	 *
+	 * It exists because the two rules genuinely conflict: ROUND-8 says an
+	 * abandoned run is discarded, MUS-7 says a finished run survives a dropped
+	 * connection. Rejecting the finalize outright would lose a real player's
+	 * result; accepting it onto the board would let anyone bank a session,
+	 * research the answers at leisure, and finalize with plausible-looking lock
+	 * times that no offline-survivable invariant can catch. So the player is
+	 * shown their score and the board is not.
+	 */
+	| 'abandoned';
 
 export interface FinalizedRound {
 	position: number;

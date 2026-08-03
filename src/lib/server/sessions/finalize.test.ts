@@ -23,7 +23,8 @@ import type { Player } from '../identity.js';
 const clean: IdentityBlockInput = {
 	isCreator: false,
 	hasPriorScoredRun: false,
-	guestDailyReplay: false
+	guestDailyReplay: false,
+	wasAbandoned: false
 };
 
 describe('resolveIdentityBlock (FAIR-1/2/7)', () => {
@@ -45,8 +46,27 @@ describe('resolveIdentityBlock (FAIR-1/2/7)', () => {
 
 	it('prefers "creator" over "replay" when both apply — it is the more informative reason', () => {
 		expect(
-			resolveIdentityBlock({ isCreator: true, hasPriorScoredRun: true, guestDailyReplay: false })
+			resolveIdentityBlock({
+				isCreator: true,
+				hasPriorScoredRun: true,
+				guestDailyReplay: false,
+				wasAbandoned: false
+			})
 		).toBe('creator');
+	});
+
+	it('blocks with "abandoned" when the sweep got there first (ROUND-8)', () => {
+		expect(resolveIdentityBlock({ ...clean, wasAbandoned: true })).toBe('abandoned');
+	});
+
+	it('never lets "abandoned" mask who the player is', () => {
+		// 'creator' and 'replay' are facts about identity and stay true whenever
+		// the run was finalized; 'abandoned' is only about timing, so it is the
+		// least informative reason and must lose to both.
+		expect(resolveIdentityBlock({ ...clean, wasAbandoned: true, isCreator: true })).toBe('creator');
+		expect(resolveIdentityBlock({ ...clean, wasAbandoned: true, hasPriorScoredRun: true })).toBe(
+			'replay'
+		);
 	});
 });
 

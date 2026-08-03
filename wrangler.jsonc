@@ -52,6 +52,13 @@
 	"triggers": {
 		"crons": [
 			"*/15 * * * *",
+			// Hourly batch: the ephemeral-quiz sweep (§15). Kept off the 15-min
+			// tick because it is the only job here that deletes rows a player
+			// could still be about to use — an unplayed generated quiz becomes a
+			// leaf the moment its TTL passes, and finalize promotes it on use, so
+			// the narrower the window between "TTL expired" and "swept", the more
+			// the sweep depends on that promotion having already landed.
+			"0 * * * *",
 			// Intended as 00:05 Europe/Paris. Cron Triggers run in UTC with no
 			// timezone support, and Europe/Paris is UTC+1/UTC+2 (DST) — 00:05
 			// local is NOT a fixed UTC time. Using 00:05 UTC as a placeholder;

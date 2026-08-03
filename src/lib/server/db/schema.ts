@@ -321,7 +321,17 @@ export const gameSession = sqliteTable(
 		scored: integer('scored', { mode: 'boolean' }).notNull().default(false),
 		/** Drives both the player-facing message (FAIR-6) and the /admin view (§15). */
 		scoredBlockReason: text('scored_block_reason', {
-			enum: ['replay', 'creator', 'clip_unavailable', 'unverified_timing', 'implausible']
+			// Mirrors `ScoredBlockReason` in game/types.ts — see there for what each
+			// means. Type-level only: the column is plain `text` with no CHECK, so
+			// adding a value needs no migration.
+			enum: [
+				'replay',
+				'creator',
+				'clip_unavailable',
+				'unverified_timing',
+				'implausible',
+				'abandoned'
+			]
 		}),
 
 		curveVersion: integer('curve_version').notNull().default(1),
