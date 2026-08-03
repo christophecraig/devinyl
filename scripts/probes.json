@@ -1,0 +1,326 @@
+{
+	"trackProbes": [
+		{
+			"artist": "Édith Piaf",
+			"expectedTrack": "Non, je ne regrette rien",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Édith Piaf",
+			"expectedTrack": "La Vie en rose",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Jacques Brel",
+			"expectedTrack": "Ne me quitte pas",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Jacques Brel",
+			"expectedTrack": "Quand on n'a que l'amour",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Georges Brassens",
+			"expectedTrack": "Les Copains d'abord",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Georges Brassens",
+			"expectedTrack": "La Mauvaise réputation",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{ "artist": "Barbara", "expectedTrack": "L'Aigle noir", "genre": "chanson", "era": "classic" },
+		{
+			"artist": "Barbara",
+			"expectedTrack": "Dis, quand reviendras-tu ?",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Charles Aznavour",
+			"expectedTrack": "La Bohème",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Charles Aznavour",
+			"expectedTrack": "Emmenez-moi",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Serge Gainsbourg",
+			"expectedTrack": "Je t'aime... moi non plus",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "France Gall",
+			"expectedTrack": "Poupée de cire, poupée de son",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Jean-Jacques Goldman",
+			"expectedTrack": "Envole-moi",
+			"genre": "variete",
+			"era": "classic"
+		},
+		{
+			"artist": "Jean-Jacques Goldman",
+			"expectedTrack": "Comme toi",
+			"genre": "variete",
+			"era": "classic"
+		},
+		{
+			"artist": "Francis Cabrel",
+			"expectedTrack": "La Corrida",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Francis Cabrel",
+			"expectedTrack": "Petite Marie",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Daniel Balavoine",
+			"expectedTrack": "Je ne suis pas un héros",
+			"genre": "variete",
+			"era": "classic"
+		},
+		{
+			"artist": "Michel Sardou",
+			"expectedTrack": "La Maladie d'amour",
+			"genre": "variete",
+			"era": "classic"
+		},
+		{
+			"artist": "Renaud",
+			"expectedTrack": "Mistral gagnant",
+			"genre": "chanson",
+			"era": "classic"
+		},
+		{
+			"artist": "Alain Souchon",
+			"expectedTrack": "Foule sentimentale",
+			"genre": "variete",
+			"era": "classic"
+		},
+		{ "artist": "Bashung", "expectedTrack": "Gaby oh Gaby", "genre": "rock", "era": "classic" },
+		{
+			"artist": "Alain Bashung",
+			"expectedTrack": "La Nuit je mens",
+			"genre": "rock",
+			"era": "classic"
+		},
+		{
+			"artist": "France Gall",
+			"expectedTrack": "Ella, elle l'a",
+			"genre": "variete",
+			"era": "classic"
+		},
+		{
+			"artist": "Mylène Farmer",
+			"expectedTrack": "Désenchantée",
+			"genre": "pop",
+			"era": "classic"
+		},
+		{ "artist": "Indochine", "expectedTrack": "L'Aventurier", "genre": "rock", "era": "classic" },
+		{ "artist": "Téléphone", "expectedTrack": "Cendrillon", "genre": "rock", "era": "classic" },
+		{
+			"artist": "Noir Désir",
+			"expectedTrack": "Le Vent nous portera",
+			"genre": "rock",
+			"era": "classic"
+		},
+		{
+			"artist": "Étienne Daho",
+			"expectedTrack": "Le Grand Sommeil",
+			"genre": "pop",
+			"era": "classic"
+		},
+		{
+			"artist": "Vanessa Paradis",
+			"expectedTrack": "Joe le taxi",
+			"genre": "pop",
+			"era": "classic"
+		},
+		{
+			"artist": "Patricia Kaas",
+			"expectedTrack": "Mon mec à moi",
+			"genre": "variete",
+			"era": "classic"
+		},
+		{
+			"artist": "Patrick Bruel",
+			"expectedTrack": "Casser la voix",
+			"genre": "variete",
+			"era": "classic"
+		},
+		{
+			"artist": "Florent Pagny",
+			"expectedTrack": "Ma liberté de penser",
+			"genre": "variete",
+			"era": "classic"
+		},
+		{ "artist": "Zazie", "expectedTrack": "Zen", "genre": "pop", "era": "classic" },
+		{ "artist": "Pascal Obispo", "expectedTrack": "Lucie", "genre": "variete", "era": "classic" },
+		{ "artist": "Manau", "expectedTrack": "La Tribu de Dana", "genre": "rap", "era": "classic" },
+		{
+			"artist": "IAM",
+			"expectedTrack": "Nés sous la même étoile",
+			"genre": "rap",
+			"era": "classic"
+		},
+		{ "artist": "NTM", "expectedTrack": "Ma Benz", "genre": "rap", "era": "classic" },
+		{
+			"artist": "Suprême NTM",
+			"expectedTrack": "Laisse pas traîner ton fils",
+			"genre": "rap",
+			"era": "classic"
+		},
+		{ "artist": "MC Solaar", "expectedTrack": "Caroline", "genre": "rap", "era": "classic" },
+		{ "artist": "Diam's", "expectedTrack": "La Boulette", "genre": "rap", "era": "classic" },
+		{
+			"artist": "Daft Punk",
+			"expectedTrack": "Around the World",
+			"genre": "electro",
+			"era": "classic"
+		},
+		{
+			"artist": "Daft Punk",
+			"expectedTrack": "One More Time",
+			"genre": "electro",
+			"era": "classic"
+		},
+		{ "artist": "Air", "expectedTrack": "Sexy Boy", "genre": "electro", "era": "classic" },
+		{ "artist": "Justice", "expectedTrack": "D.A.N.C.E.", "genre": "electro", "era": "current" },
+		{ "artist": "Gesaffelstein", "expectedTrack": "Pursuit", "genre": "electro", "era": "current" },
+		{ "artist": "David Guetta", "expectedTrack": "Titanium", "genre": "electro", "era": "current" },
+		{ "artist": "Stromae", "expectedTrack": "Alors on danse", "genre": "pop", "era": "current" },
+		{ "artist": "Stromae", "expectedTrack": "Papaoutai", "genre": "pop", "era": "current" },
+		{ "artist": "Stromae", "expectedTrack": "Formidable", "genre": "pop", "era": "current" },
+		{ "artist": "Indila", "expectedTrack": "Dernière danse", "genre": "pop", "era": "current" },
+		{
+			"artist": "Indila",
+			"expectedTrack": "Tourner dans le vide",
+			"genre": "pop",
+			"era": "current"
+		},
+		{ "artist": "Angèle", "expectedTrack": "Balance ton quoi", "genre": "pop", "era": "current" },
+		{ "artist": "Clara Luciani", "expectedTrack": "La Grenade", "genre": "pop", "era": "current" },
+		{ "artist": "Clara Luciani", "expectedTrack": "Nue", "genre": "pop", "era": "current" },
+		{
+			"artist": "Julien Doré",
+			"expectedTrack": "Paris-Seychelles",
+			"genre": "pop",
+			"era": "current"
+		},
+		{
+			"artist": "Christine and the Queens",
+			"expectedTrack": "Tilted",
+			"genre": "pop",
+			"era": "current"
+		},
+		{ "artist": "Zaz", "expectedTrack": "Je veux", "genre": "pop", "era": "current" },
+		{ "artist": "Louane", "expectedTrack": "Avenir", "genre": "pop", "era": "current" },
+		{ "artist": "Vianney", "expectedTrack": "Pas là", "genre": "pop", "era": "current" },
+		{ "artist": "Pomme", "expectedTrack": "Anxiété", "genre": "pop", "era": "current" },
+		{
+			"artist": "Juliette Armanet",
+			"expectedTrack": "L'Amour en solitaire",
+			"genre": "pop",
+			"era": "current"
+		},
+		{
+			"artist": "Orelsan",
+			"expectedTrack": "La Terre est ronde",
+			"genre": "rap",
+			"era": "current"
+		},
+		{ "artist": "Orelsan", "expectedTrack": "Basique", "genre": "rap", "era": "current" },
+		{ "artist": "PNL", "expectedTrack": "Au DD", "genre": "rap", "era": "current" },
+		{ "artist": "Nekfeu", "expectedTrack": "On verra", "genre": "rap", "era": "current" },
+		{ "artist": "Damso", "expectedTrack": "Macarena", "genre": "rap", "era": "current" },
+		{ "artist": "Jul", "expectedTrack": "Le monde est à moi", "genre": "rap", "era": "current" },
+		{ "artist": "Aya Nakamura", "expectedTrack": "Djadja", "genre": "rap", "era": "current" },
+		{ "artist": "Gims", "expectedTrack": "Bella", "genre": "rap", "era": "current" },
+		{ "artist": "Maître Gims", "expectedTrack": "J'me tire", "genre": "rap", "era": "current" },
+		{ "artist": "Soprano", "expectedTrack": "Roule", "genre": "rap", "era": "current" },
+		{ "artist": "Booba", "expectedTrack": "Validée", "genre": "rap", "era": "current" },
+		{ "artist": "Bigflo & Oli", "expectedTrack": "Dommage", "genre": "rap", "era": "current" },
+		{ "artist": "Lomepal", "expectedTrack": "1000°C", "genre": "rap", "era": "current" },
+		{ "artist": "SCH", "expectedTrack": "Otto", "genre": "rap", "era": "current" },
+		{ "artist": "Ninho", "expectedTrack": "Jefe", "genre": "rap", "era": "current" },
+		{
+			"artist": "Kendji Girac",
+			"expectedTrack": "Color Gitano",
+			"genre": "variete",
+			"era": "current"
+		},
+		{ "artist": "Amir", "expectedTrack": "J'ai cherché", "genre": "pop", "era": "current" },
+		{ "artist": "Slimane", "expectedTrack": "Viens on s'aime", "genre": "pop", "era": "current" },
+		{
+			"artist": "M Pokora",
+			"expectedTrack": "À nos actes manqués",
+			"genre": "pop",
+			"era": "current"
+		},
+		{ "artist": "Superbus", "expectedTrack": "Lola", "genre": "rock", "era": "current" },
+		{
+			"artist": "Yannick Noah",
+			"expectedTrack": "Saga Africa",
+			"genre": "variete",
+			"era": "current"
+		},
+		{
+			"artist": "Grand Corps Malade",
+			"expectedTrack": "Roméo kiffe Juliette",
+			"genre": "chanson",
+			"era": "current"
+		},
+		{
+			"artist": "Chimène Badi",
+			"expectedTrack": "Entre nous",
+			"genre": "variete",
+			"era": "current"
+		},
+		{
+			"artist": "Christophe Maé",
+			"expectedTrack": "On s'attache",
+			"genre": "variete",
+			"era": "current"
+		}
+	],
+	"artistProbes": [
+		"Jean-Jacques Goldman",
+		"Stromae",
+		"Angèle",
+		"Orelsan",
+		"Aya Nakamura",
+		"Georges Brassens",
+		"IAM",
+		"Christine and the Queens",
+		"Booba",
+		"Zaz"
+	],
+	"themeProbes": [
+		"bande originale de film",
+		"années 80",
+		"chanson française",
+		"musique de Noël",
+		"comédie musicale française",
+		"rap français",
+		"chanson d'amour française",
+		"génériques dessins animés français"
+	]
+}

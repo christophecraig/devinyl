@@ -1,0 +1,3 @@
+# Architecture Decision Records
+
+This directory records decisions that deviate from, or fill a gap in, `docs/technical-spec.md` — each ADR states the context, the decision, its consequences, and (where relevant) an escape hatch back to the spec's original design. Current records: [0001-deezer-tos.md](./0001-deezer-tos.md) (Deezer API Terms of Use review — conditional accept, with a binding obligations checklist and a re-check gate before public launch) and [0002-cloudflare-hosting.md](./0002-cloudflare-hosting.md) (Cloudflare Workers + D1 for V1 instead of technical-spec's Hetzner VPS/Docker/Litestream shape — a $0-POC deviation with the VPS design kept as a documented, low-cost escape hatch).

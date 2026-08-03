@@ -1,0 +1,38 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+/dist
+
+# Wrangler / D1 local state, Cloudflare-generated types
+worker-configuration.d.ts
+
+# Testing
+/test-results
+/playwright-report
+scripts/.probe-results.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+# Playwright
+test-results
+
+# Editor swap files
+*.swp
+*.swo

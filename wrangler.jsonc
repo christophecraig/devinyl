@@ -1,0 +1,63 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	// Worker name per implementation-plan.md Phase 0.5 (S.2). Repo/package
+	// name stays "blind-test"; the deployed Worker is "devinyl".
+	"name": "devinyl",
+	"compatibility_date": "2026-08-03",
+	"compatibility_flags": [
+		// Full Node.js compat shim (plan S.2), superset of "nodejs_als".
+		"nodejs_compat"
+	],
+	// Custom entry (worker/entry.ts) wraps the adapter's generated fetch handler
+	// and adds the `scheduled` export the Cron Triggers below need. See the file
+	// header for why the adapter cannot do this itself.
+	"main": "worker/entry.ts",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"workers_dev": true,
+	// Keys the FAIR-7 daily_guest_claim IP hash (§6). Declared here so the
+	// binding always exists and `wrangler types` gives it a non-optional type —
+	// the code must never fall back to an unkeyed digest, which would make the
+	// stored hashes trivially invertible over IPv4.
+	//
+	// This value is a DEV PLACEHOLDER and is deliberately not a secret. Before
+	// the first real deploy, run:
+	//     wrangler secret put IP_HASH_SECRET
+	// A secret of the same name overrides this var in the deployed Worker, so
+	// production never uses the value committed here.
+	"vars": {
+		"IP_HASH_SECRET": "dev-placeholder-not-a-secret"
+	},
+	"preview_urls": true,
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "devinyl",
+			// TODO(S.1 [USER]): replace with the real D1 database_id once the
+			// Cloudflare account + `wrangler d1 create devinyl` have run.
+			// `wrangler dev`/`d1 migrations apply --local` work fine against
+			// this placeholder because local mode never dials the real API.
+			"database_id": "00000000-0000-0000-0000-000000000000",
+			"migrations_dir": "drizzle"
+		}
+	],
+	// Plan deviation table: two Cron Triggers replace in-process setInterval
+	// jobs, meant to dispatch through the single src/lib/server/jobs
+	// runJobs(kind) entry point.
+	// Dispatched by worker/entry.ts, which maps each cron expression to a
+	// runJobs(kind) batch. Adding a schedule here means adding it to
+	// jobKindFor() there, or the trigger fires into a logged no-op.
+	"triggers": {
+		"crons": [
+			"*/15 * * * *",
+			// Intended as 00:05 Europe/Paris. Cron Triggers run in UTC with no
+			// timezone support, and Europe/Paris is UTC+1/UTC+2 (DST) — 00:05
+			// local is NOT a fixed UTC time. Using 00:05 UTC as a placeholder;
+			// revisit if daily-cron timing (3.1/3.8/3.11/4.2) needs to be
+			// pinned to Paris midnight rather than "some time overnight UTC".
+			"5 0 * * *"
+		]
+	}
+}

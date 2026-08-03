@@ -1,0 +1,26 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+
+	// BUILD-ONLY CONFIG — read by @sveltejs/adapter-cloudflare, never by
+	// `wrangler dev` or `wrangler deploy`.
+	//
+	// The adapter treats `main` as its *output* path: it writes the Worker it
+	// generates to whatever `main` points at. If the deploy config's `main` were
+	// pointed at our own entry, the adapter would silently overwrite that file on
+	// every build — which is exactly what happens without this split.
+	//
+	// So: the adapter writes here, to the generated artifact path, and
+	// wrangler.jsonc (the real deploy config) points `main` at worker/entry.ts,
+	// which imports this artifact and adds the `scheduled` export the Cron
+	// Triggers need.
+	//
+	// Keep `name` and `assets.directory` in sync with wrangler.jsonc.
+	"name": "devinyl",
+	"compatibility_date": "2026-08-03",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	}
+}
