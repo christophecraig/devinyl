@@ -1,0 +1,7 @@
+# Local-dev values for the Worker's non-binding env. Copy to `.dev.vars`.
+# Production values are set with `wrangler secret put <NAME>` — never here,
+# and never in wrangler.jsonc's `vars` (see the note in that file).
+
+# Keys the FAIR-7 daily_guest_claim IP hash (§6). Any non-empty string works
+# locally; production uses a 32-byte random secret.
+IP_HASH_SECRET="dev-placeholder-not-a-secret"

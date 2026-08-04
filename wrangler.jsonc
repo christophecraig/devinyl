@@ -17,29 +17,26 @@
 		"directory": ".svelte-kit/cloudflare"
 	},
 	"workers_dev": true,
-	// Keys the FAIR-7 daily_guest_claim IP hash (§6). Declared here so the
-	// binding always exists and `wrangler types` gives it a non-optional type —
-	// the code must never fall back to an unkeyed digest, which would make the
-	// stored hashes trivially invertible over IPv4.
+	// IP_HASH_SECRET (keys the FAIR-7 daily_guest_claim IP hash, §6) is
+	// deliberately NOT declared in a `vars` block here. Precedence runs the
+	// opposite way to what you might expect: `wrangler deploy` overwrites the
+	// remote configuration with the local one, so a committed var CLOBBERS a
+	// remote secret of the same name on every deploy — it does not lose to it.
+	// A placeholder here would therefore silently key production's IP hashes
+	// with a public value, making them invertible over IPv4.
 	//
-	// This value is a DEV PLACEHOLDER and is deliberately not a secret. Before
-	// the first real deploy, run:
-	//     wrangler secret put IP_HASH_SECRET
-	// A secret of the same name overrides this var in the deployed Worker, so
-	// production never uses the value committed here.
-	"vars": {
-		"IP_HASH_SECRET": "dev-placeholder-not-a-secret"
-	},
+	// Instead:
+	//   - production: `wrangler secret put IP_HASH_SECRET` (secrets survive
+	//     deploys as long as no var shadows them)
+	//   - local dev:  `.dev.vars` (gitignored; copy .dev.vars.example)
+	// `wrangler types` reads .dev.vars, so Env.IP_HASH_SECRET stays
+	// non-optional and the code can never fall back to an unkeyed digest.
 	"preview_urls": true,
 	"d1_databases": [
 		{
 			"binding": "DB",
 			"database_name": "devinyl",
-			// TODO(S.1 [USER]): replace with the real D1 database_id once the
-			// Cloudflare account + `wrangler d1 create devinyl` have run.
-			// `wrangler dev`/`d1 migrations apply --local` work fine against
-			// this placeholder because local mode never dials the real API.
-			"database_id": "00000000-0000-0000-0000-000000000000",
+			"database_id": "ac4591bc-d99a-41ba-bf27-1ce69e2b8222",
 			"migrations_dir": "drizzle"
 		}
 	],
