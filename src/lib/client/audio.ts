@@ -162,7 +162,7 @@ export class AudioEngine {
 		};
 
 		this.startedAtCtxTime = ctx.currentTime;
-		this.activeClipMs = buffer.duration * 1000;
+		this.activeClipMs = Math.round(buffer.duration * 1000);
 		this.activeSource = source;
 		source.start(0);
 
@@ -186,7 +186,7 @@ export class AudioEngine {
 	elapsedMs(): number {
 		if (!this.ctx || this.startedAtCtxTime === null) return 0;
 		const elapsed = (this.ctx.currentTime - this.startedAtCtxTime) * 1000;
-		return Math.max(0, Math.min(elapsed, this.activeClipMs));
+		return Math.round(Math.max(0, Math.min(elapsed, this.activeClipMs)));
 	}
 
 	/**
