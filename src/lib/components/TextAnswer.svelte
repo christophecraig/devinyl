@@ -87,7 +87,7 @@
 		{@const locked = isLocked(target)}
 		{@const isRejected = !locked && (rejected[target] ?? false)}
 		{@const statusId = `text-answer-status-${target}`}
-		<div class="field">
+		<div class="field" class:is-locked={locked}>
 			<label for={`text-answer-input-${target}`}>{LABEL[target]}</label>
 			<input
 				id={`text-answer-input-${target}`}
@@ -111,58 +111,88 @@
 			</p>
 		</div>
 	{/each}
+	<!-- Not `aria-hidden`: "Enter locks it in" is the whole interaction model
+	     here (there is no submit button, ANS-1), so it matters most to the
+	     people who can't see the inputs. Dropped once nothing is left to lock
+	     so it never contradicts the screen. -->
+	{#if required.some((target) => !isLocked(target))}
+		<p class="hint">Press Enter to lock in</p>
+	{/if}
 </div>
 
 <style>
 	.text-answer {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: var(--space-4);
 	}
 
 	.field {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		gap: var(--space-1);
 	}
 
-	label {
-		font-weight: 600;
-	}
-
+	/* The answer is the loudest thing on the screen while a clip is playing:
+	   display face, oversized, so a player glancing down mid-clip reads their
+	   own guess at a glance. */
 	input {
-		padding: 0.5rem;
-		font-size: 1rem;
-		border: 1px solid;
-		border-radius: 0.25rem;
-		transition: border-color 0.15s ease;
+		font-family: var(--font-display);
+		font-size: var(--text-display);
+		padding-block: var(--space-2);
+	}
+
+	.is-locked input:disabled {
+		color: var(--positive);
+		border-bottom-color: var(--positive);
+		border-bottom-style: solid;
+		opacity: 1;
+	}
+
+	.status {
+		min-height: 1.4em;
+		margin: 0;
+		font-size: var(--text-small);
+		font-weight: 600;
+		letter-spacing: 0.02em;
+	}
+
+	/* Icons via pseudo-elements, never text nodes: `.status`'s textContent is
+	   asserted verbatim ("Locked in") by the solo happy-path e2e, and it is
+	   also what a screen reader announces through `aria-describedby`. A "✓" in
+	   the markup would leak into both. */
+	.status.locked {
+		color: var(--positive);
+		animation: stamp var(--dur) var(--ease) both;
+		/* Block-level text scaled from its centre slides sideways as it grows;
+		   anchoring the origin to the text's own start edge keeps "Locked in"
+		   put and makes it read as a stamp rather than a slide. */
+		transform-origin: left center;
+	}
+
+	.status.locked::before {
+		content: '✓ ';
+	}
+
+	.status.rejected {
+		color: var(--negative);
+	}
+
+	.status.rejected::before {
+		content: '↺ ';
+	}
+
+	.hint {
+		margin: 0;
+		font-size: var(--text-micro);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		input {
 			transition: none;
 		}
-	}
-
-	input:disabled {
-		opacity: 0.7;
-	}
-
-	input[aria-invalid='true'] {
-		border-color: #c0392b;
-	}
-
-	.status {
-		min-height: 1.2em;
-		margin: 0;
-		font-size: 0.875rem;
-	}
-
-	.status.rejected {
-		color: #c0392b;
-	}
-
-	.status.locked {
-		color: #1e8449;
 	}
 </style>

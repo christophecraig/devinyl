@@ -200,6 +200,41 @@
 	let activeHandle: PlaybackHandle | null = null;
 	let countdownValue = $state<number | null>(null);
 
+	// ---------------------------------------------------------------------------
+	// Clip timer — visual-only feedback for the decaying speed-scoring curve
+	// (SCORE-2). Polls the audio clock via rAF rather than a live region: it
+	// changes every frame, so announcing it would spam screen readers. The
+	// existing clip-start/clip-end announcements already cover that audience.
+	// ---------------------------------------------------------------------------
+
+	let clipProgress = $state(0);
+	let clipRemainingMs = $state(0);
+	let clipTimerFrame: number | null = null;
+
+	function tickClipTimer(): void {
+		if (game?.phase !== 'clip') {
+			clipTimerFrame = null;
+			return;
+		}
+		const total = audio.clipMs();
+		const elapsed = audio.elapsedMs();
+		clipProgress = total > 0 ? Math.min(1, elapsed / total) : 0;
+		clipRemainingMs = Math.max(0, total - elapsed);
+		clipTimerFrame = requestAnimationFrame(tickClipTimer);
+	}
+
+	$effect(() => {
+		if (game?.phase === 'clip' && clipTimerFrame === null) {
+			clipTimerFrame = requestAnimationFrame(tickClipTimer);
+		}
+		return () => {
+			if (clipTimerFrame !== null) {
+				cancelAnimationFrame(clipTimerFrame);
+				clipTimerFrame = null;
+			}
+		};
+	});
+
 	function delay(ms: number): Promise<void> {
 		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
@@ -387,16 +422,29 @@
 
 <LiveRegion {announcer} />
 
+<!--
+	Round progress, as filled/unfilled pips. `aria-hidden` throughout: the `<h1>`
+	directly above it already says "Round 3 of 10" in words, so exposing this
+	would just make every phase change announce the same fact twice.
+-->
+{#snippet roundPips(index: number, total: number)}
+	<div class="pips" aria-hidden="true">
+		{#each { length: total }, i}
+			<span class="pip" class:done={i < index} class:current={i === index}></span>
+		{/each}
+	</div>
+{/snippet}
+
 {#if recoveredFinalize}
 	<div class="banner" role="status">
-		A previous game's score ({recoveredFinalize.totalScore} pts) was submitted.
-		<button type="button" onclick={() => (recoveredFinalize = null)}>Dismiss</button>
+		<p>A previous game's score ({recoveredFinalize.totalScore} pts) was submitted.</p>
+		<button class="quiet" type="button" onclick={() => (recoveredFinalize = null)}>Dismiss</button>
 	</div>
 {/if}
 
-<main>
+<main class="sheet">
 	{#if !mounted}
-		<p>Loading…</p>
+		<p class="waiting">Loading…</p>
 	{:else if nickname === null}
 		<section bind:this={phaseSectionEl} tabindex="-1">
 			<h1>Pick a nickname to play</h1>
@@ -405,12 +453,12 @@
 	{:else if sessionError}
 		<section bind:this={phaseSectionEl} tabindex="-1">
 			<h1>Couldn't start this quiz</h1>
-			<p>{sessionError.message}</p>
+			<p class="error-note">{sessionError.message}</p>
 			<button type="button" onclick={ensureSession}>Retry</button>
 		</section>
 	{:else if !manifest}
 		<section bind:this={phaseSectionEl} tabindex="-1" aria-busy="true">
-			<p>Preparing your quiz…</p>
+			<p class="waiting">Preparing your quiz…</p>
 		</section>
 	{:else if !game}
 		<PreloadGate
@@ -422,13 +470,32 @@
 		/>
 	{:else if game.phase === 'countdown'}
 		<section bind:this={phaseSectionEl} tabindex="-1" class="countdown">
-			<h1>Round {game.roundIndex + 1} of {game.totalRoundCount}</h1>
-			<p class="countdown-number" aria-hidden="true">{countdownValue ?? ''}</p>
+			<h1 class="round-heading">Round {game.roundIndex + 1} of {game.totalRoundCount}</h1>
+			{@render roundPips(game.roundIndex, game.totalRoundCount)}
+			<!-- Keyed so each tick re-mounts the number and re-runs its entrance;
+			     a plain text swap would animate once and then sit still. -->
+			{#key countdownValue}
+				<p class="countdown-number" aria-hidden="true">{countdownValue ?? ''}</p>
+			{/key}
+			<p class="countdown-note" aria-hidden="true">Get ready…</p>
 		</section>
 	{:else if game.phase === 'clip'}
 		<section bind:this={phaseSectionEl} tabindex="-1" class="clip">
-			<h1>Round {game.roundIndex + 1} of {game.totalRoundCount}</h1>
-			<p>Listen closely — the clip plays once.</p>
+			<h1 class="round-heading">Round {game.roundIndex + 1} of {game.totalRoundCount}</h1>
+			{@render roundPips(game.roundIndex, game.totalRoundCount)}
+			<p class="clip-note">Listen closely — the clip plays once.</p>
+			<div class="clip-timer" class:urgent={clipRemainingMs > 0 && clipRemainingMs < 5000}>
+				<div class="clip-timer-track" aria-hidden="true">
+					<div class="clip-timer-fill" style={`width: ${(clipProgress * 100).toFixed(2)}%`}></div>
+					<span class="clip-timer-knob" style={`left: ${(clipProgress * 100).toFixed(2)}%`}></span>
+				</div>
+				<!-- aria-hidden, not a live region: this repaints every frame, and
+				     the clip start/end announcements already carry this for screen
+				     readers (see the clip-timer note in the script above). -->
+				<span class="clip-timer-label" aria-hidden="true"
+					>{Math.ceil(clipRemainingMs / 1000)}s left</span
+				>
+			</div>
 			{#if manifest.settings.answerMode === 'choice'}
 				<ChoiceAnswer
 					{game}
@@ -465,89 +532,275 @@
 		</section>
 	{:else if game.phase === 'scoreboard'}
 		<section bind:this={phaseSectionEl} tabindex="-1" class="scoreboard">
-			<h1>Score so far</h1>
+			<h1 class="round-heading">Score so far</h1>
 			<p class="score-total">{runningTotal} pts</p>
-			<p>Round {game.roundIndex + 1} of {game.totalRoundCount} complete.</p>
-			<button type="button" onclick={() => game?.advance()}>Continue</button>
+			{@render roundPips(game.roundIndex + 1, game.totalRoundCount)}
+			<p class="muted">Round {game.roundIndex + 1} of {game.totalRoundCount} complete.</p>
+			<button class="primary wide" type="button" onclick={() => game?.advance()}>Continue</button>
 		</section>
 	{:else if game.phase === 'summary'}
 		<section bind:this={phaseSectionEl} tabindex="-1" class="summary">
+			<p class="eyebrow">That's the lot</p>
 			<h1>Quiz complete</h1>
 
 			{#if finalizePending}
-				<p role="status">Submitting your score…</p>
+				<p class="waiting" role="status">Submitting your score…</p>
 			{:else if finalizeError}
-				<p role="alert">
+				<p class="error-note" role="alert">
 					Couldn't confirm your score with the server ({finalizeError.message}). Your local score is
 					shown below; it will be retried automatically next visit.
 				</p>
 				<button type="button" onclick={() => finishSession(game!.results)}>Retry</button>
 			{:else if finalizeResult}
-				<p class="score-total">{finalizeResult.totalScore} pts</p>
+				<p class="score-total final">{finalizeResult.totalScore} pts</p>
 				{#if !finalizeResult.scored}
-					<p>This run isn't posted to a board ({finalizeResult.scoredBlockReason}).</p>
+					<p class="muted">
+						This run isn't posted to a board ({finalizeResult.scoredBlockReason}).
+					</p>
 				{/if}
 			{/if}
 
 			{#if !finalizeResult}
-				<p class="score-total">{runningTotal} pts (local, unconfirmed)</p>
+				<p class="score-total final">{runningTotal} pts (local, unconfirmed)</p>
 			{/if}
+
+			<hr class="rule" />
 
 			<ul class="round-breakdown">
 				{#each game.results as result (result.position)}
-					<li>
-						Round {result.position + 1}: {result.skipped ? 'Skipped' : `${roundPoints(result)} pts`}
+					<li class:skipped={result.skipped}>
+						<span>Round {result.position + 1}</span>
+						<span class="breakdown-points"
+							>{result.skipped ? 'Skipped' : `${roundPoints(result)} pts`}</span
+						>
 					</li>
 				{/each}
 			</ul>
 
-			<!-- Challenge/share are Phase 3 (CHAL-1…4) — stubbed here on purpose. -->
-			<button type="button" disabled title="Coming soon">Challenge a friend</button>
+			<div class="summary-actions">
+				<!-- Challenge/share are Phase 3 (CHAL-1…4) — stubbed here on purpose. -->
+				<button type="button" disabled title="Coming soon">Challenge a friend</button>
 
-			<a href={resolve('/')}>Play again</a>
+				<a class="btn" href={resolve('/')}>Play again</a>
+			</div>
 		</section>
 	{:else if game.phase === 'abandoned'}
 		<section bind:this={phaseSectionEl} tabindex="-1">
 			<h1>This session was abandoned</h1>
-			<a href={resolve('/')}>Start a new quiz</a>
+			<a class="btn" href={resolve('/')}>Start a new quiz</a>
 		</section>
 	{/if}
 </main>
 
 <style>
-	main {
-		max-width: 30rem;
-		margin: 0 auto;
-		padding: 1.5rem;
-	}
-
 	main :global(section) {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: var(--space-4);
 	}
 
 	main :global(section:focus) {
 		outline: none;
 	}
 
+	/* Sections are stretch-aligned flex columns (the answer UIs and timers all
+	   want the full column), so a standalone button would otherwise run edge to
+	   edge. Opt back in per-button with `.wide` where full width is the point. */
+	main :global(section > button) {
+		align-self: flex-start;
+	}
+
 	.banner {
 		display: flex;
-		gap: 1rem;
+		gap: var(--space-4);
 		align-items: center;
-		padding: 0.75rem 1.5rem;
-		border-bottom: 1px solid;
+		justify-content: space-between;
+		padding: var(--space-3) var(--space-4);
+		background: var(--accent-soft);
+		border-bottom: 1px solid var(--accent);
+		font-size: var(--text-small);
+	}
+
+	.banner p {
+		margin: 0;
+	}
+
+	.waiting {
+		color: var(--ink-muted);
+	}
+
+	.error-note {
+		margin: 0;
+		padding: var(--space-3);
+		background: var(--negative-soft);
+		border-left: 3px solid var(--negative);
+		border-radius: var(--radius-sm);
+	}
+
+	/* The phase heading is a wayfinding label, not the loudest thing on screen
+	   — the countdown digit and the answer inputs are. */
+	.round-heading {
+		font-family: var(--font-body);
+		font-size: var(--text-micro);
+		font-weight: 600;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--accent-ink);
+	}
+
+	.pips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 5px;
+		width: 100%;
+		max-width: 22rem;
+	}
+
+	.pip {
+		max-width: 1.75rem;
+		flex: 1 1 0.5rem;
+		height: 4px;
+		border-radius: var(--radius-pill);
+		background: var(--surface-sunken);
+		border: 1px solid var(--rule);
+	}
+
+	.pip.done {
+		background: var(--accent);
+		border-color: var(--accent);
+	}
+
+	.pip.current {
+		background: var(--accent-soft);
+		border-color: var(--accent);
+	}
+
+	/* --- Countdown ---------------------------------------------------------- */
+
+	.countdown {
+		align-items: center;
+		text-align: center;
+		padding-top: var(--space-6);
 	}
 
 	.countdown-number {
-		font-size: 3rem;
-		font-weight: 700;
-		text-align: center;
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: clamp(5rem, 4rem + 14vw, 9rem);
+		font-weight: 600;
+		line-height: 1;
+		color: var(--accent);
+		font-variant-numeric: tabular-nums;
+		animation: stamp var(--dur-slow) var(--ease) both;
 	}
 
+	.countdown-note {
+		margin: 0;
+		font-size: var(--text-micro);
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+	}
+
+	/* --- Clip --------------------------------------------------------------- */
+
+	.clip-note {
+		margin: 0;
+		font-size: var(--text-small);
+		color: var(--ink-muted);
+	}
+
+	.clip-timer {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		padding: var(--space-3) var(--space-4);
+		background: var(--surface-raised);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-md);
+	}
+
+	/* The groove: a hairline the stylus travels along, rather than a bar that
+	   fills. Overflow stays visible so the knob can sit proud of the track. */
+	.clip-timer-track {
+		position: relative;
+		flex: 1;
+		height: 3px;
+		border-radius: var(--radius-pill);
+		background: var(--surface-sunken);
+		box-shadow: inset 0 0 0 1px var(--rule);
+	}
+
+	.clip-timer-fill {
+		height: 100%;
+		border-radius: var(--radius-pill);
+		background: var(--accent);
+		transition: width 0.1s linear;
+	}
+
+	.clip-timer-knob {
+		position: absolute;
+		top: 50%;
+		width: 11px;
+		height: 11px;
+		border-radius: var(--radius-pill);
+		background: var(--accent);
+		border: 2px solid var(--surface-raised);
+		transform: translate(-50%, -50%);
+		transition: left 0.1s linear;
+	}
+
+	.clip-timer-label {
+		font-variant-numeric: tabular-nums;
+		font-weight: 600;
+		font-size: var(--text-title);
+		min-width: 4.5rem;
+		text-align: right;
+		color: var(--ink-muted);
+	}
+
+	/* Last five seconds. Colour *and* a pulse — colour alone would be the only
+	   signal for a change that matters to scoring. */
+	.clip-timer.urgent .clip-timer-label {
+		color: var(--accent-ink);
+	}
+
+	.clip-timer.urgent .clip-timer-knob {
+		animation: pulse 900ms var(--ease) infinite;
+	}
+
+	@keyframes pulse {
+		0%,
+		100% {
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
+		}
+		50% {
+			box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 0%, transparent);
+		}
+	}
+
+	/* --- Scoreboard + summary ------------------------------------------------ */
+
 	.score-total {
-		font-size: 1.5rem;
-		font-weight: 700;
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--text-hero);
+		font-weight: 600;
+		line-height: 1;
+		color: var(--accent-ink);
+		font-variant-numeric: tabular-nums;
+		animation: stamp var(--dur-slow) var(--ease) both;
+		/* Left-aligned text in a full-width block: scale from the text's own
+		   edge so the number grows in place instead of drifting right. */
+		transform-origin: left center;
+	}
+
+	.score-total.final {
+		font-size: clamp(3rem, 2.2rem + 4vw, 4.5rem);
+	}
+
+	.summary .eyebrow + h1 {
+		font-size: var(--text-display);
 	}
 
 	.round-breakdown {
@@ -556,19 +809,48 @@
 		padding: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
 	}
 
-	button {
-		align-self: flex-start;
-		padding: 0.6rem 1.25rem;
-		font-size: 1rem;
-		cursor: pointer;
+	.round-breakdown li {
+		display: flex;
+		justify-content: space-between;
+		gap: var(--space-4);
+		padding: var(--space-2) 0;
+		border-bottom: 1px solid var(--rule);
+		font-size: var(--text-small);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.round-breakdown li.skipped {
+		color: var(--ink-muted);
+	}
+
+	.breakdown-points {
+		font-weight: 600;
+	}
+
+	.summary-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-3);
+		margin-top: var(--space-2);
+	}
+
+	.wide {
+		align-self: stretch;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.countdown-number {
+		.clip-timer-fill,
+		.clip-timer-knob {
 			transition: none;
+		}
+
+		.clip-timer.urgent .clip-timer-knob {
+			animation: none;
+			/* The pulse is the urgency cue; without it, hold the largest ring so
+			   the signal survives rather than disappearing entirely. */
+			box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent);
 		}
 	}
 </style>

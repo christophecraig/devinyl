@@ -166,54 +166,83 @@
 	.choice-answer {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: var(--space-4);
 	}
 
 	.choice-group {
-		border: 1px solid;
-		border-radius: 0.25rem;
-		padding: 0.75rem;
+		padding: var(--space-3);
+		background: var(--surface-raised);
+		box-shadow: var(--shadow-card);
 	}
 
 	legend {
-		font-weight: 600;
-		padding: 0 0.25rem;
+		padding: 0 var(--space-2);
+		text-transform: uppercase;
+		font-size: var(--text-micro);
+		letter-spacing: 0.14em;
+		color: var(--accent-ink);
 	}
 
 	.listbox {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: var(--space-2);
 		outline: none;
 	}
 
 	.option {
-		padding: 0.5rem 0.75rem;
-		border: 1px solid;
-		border-radius: 0.25rem;
+		padding: var(--space-3);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-md);
+		background: var(--surface);
 		cursor: pointer;
 		transition:
-			background-color 0.15s ease,
-			border-color 0.15s ease;
+			background-color var(--dur-fast) var(--ease),
+			border-color var(--dur-fast) var(--ease),
+			transform var(--dur-fast) var(--ease);
 	}
 
+	.option:hover {
+		border-color: var(--accent);
+		background: var(--accent-soft);
+	}
+
+	/* The roving `aria-activedescendant` pointer. It has to look like focus
+	   without *being* focus (the listbox keeps the real focus — see the module
+	   doc), so it borrows the app's focus ring deliberately. */
 	.option.active {
-		outline: 2px solid;
+		outline: 2px solid var(--accent);
 		outline-offset: 2px;
+		border-color: var(--accent);
 	}
 
+	/* Committed, and irreversible (ANS-7) — so it reads as a stamp, not a
+	   highlight. Still never says "right": that's the reveal's job. */
 	.option.picked {
 		font-weight: 600;
-		border-width: 2px;
+		background: var(--accent);
+		border-color: var(--accent);
+		color: var(--on-accent);
+		animation: stamp var(--dur) var(--ease) both;
 	}
 
 	.listbox[aria-disabled='true'] .option {
 		cursor: default;
-		opacity: 0.6;
+		opacity: 0.55;
+	}
+
+	.listbox[aria-disabled='true'] .option:hover {
+		border-color: var(--rule);
+		background: var(--surface);
 	}
 
 	.listbox[aria-disabled='true'] .option.picked {
 		opacity: 1;
+	}
+
+	.listbox[aria-disabled='true'] .option.picked:hover {
+		background: var(--accent);
+		border-color: var(--accent);
 	}
 
 	@media (prefers-reduced-motion: reduce) {

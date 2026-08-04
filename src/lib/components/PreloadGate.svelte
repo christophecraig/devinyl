@@ -51,6 +51,7 @@
      inside it is focusable yet (A11Y-3), e.g. the bare loading state. -->
 <section class="preload-gate" tabindex="-1">
 	{#if phase === 'loading'}
+		<p class="eyebrow">Cueing up</p>
 		<h1>Loading your quiz…</h1>
 		<div
 			class="progress-track"
@@ -63,22 +64,32 @@
 		</div>
 		<!-- polite status readout — not part of the gameplay Announcer, this is
 		     a one-off loading screen, not a round-flow announcement. -->
-		<p role="status" aria-live="polite">
+		<p class="status" role="status" aria-live="polite">
 			Loaded {progress?.settled ?? 0} of {progress?.total ?? roundCount} clips
 			{#if skippedCount > 0}
 				&mdash; {skippedCount} unavailable and will be skipped
 			{/if}
 		</p>
 	{:else}
+		<p class="eyebrow">{roundCount} rounds</p>
 		<h1>Ready to play?</h1>
-		<p>{roundCount} rounds. Once you start, clips play once each — no pausing or replaying.</p>
+
+		<!-- The house rules, as a list rather than a sentence: it is the last
+		     thing a player reads before the clock starts, and MUS-7's "clips
+		     play once" is the expectation most worth landing. -->
+		<ul class="rules">
+			<li>Each clip plays <strong>once</strong> — no pausing, no replays.</li>
+			<li>Answer faster, score higher.</li>
+			<li>Wrong guesses cost you nothing but time.</li>
+		</ul>
+
 		{#if phase === 'confirm'}
-			<p>
+			<p class="notice">
 				This quiz is large or your connection looks slow: about {formatMb(estimate.bytes)} MB, roughly
 				{formatSeconds(estimate.seconds)} s to download.
 			</p>
 		{/if}
-		<button type="button" onclick={onStart}>
+		<button class="primary start" type="button" onclick={onStart}>
 			{phase === 'confirm' ? 'Download and start' : 'Start quiz'}
 		</button>
 	{/if}
@@ -88,32 +99,84 @@
 	.preload-gate {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: var(--space-4);
 		max-width: 28rem;
+		animation: rise var(--dur-slow) var(--ease) both;
 	}
 
 	.preload-gate:focus {
 		outline: none;
 	}
 
-	button {
-		align-self: flex-start;
-		padding: 0.75rem 1.5rem;
-		font-size: 1rem;
-		cursor: pointer;
+	h1 {
+		font-size: var(--text-hero);
+	}
+
+	.rules {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		color: var(--ink-muted);
+	}
+
+	.rules li {
+		position: relative;
+		padding-left: var(--space-5);
+	}
+
+	/* Each rule gets its own little stylus dot — the same ornament as `.rule`. */
+	.rules li::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 0.6em;
+		width: 5px;
+		height: 5px;
+		border-radius: var(--radius-pill);
+		background: var(--accent);
+	}
+
+	.rules strong {
+		color: var(--ink);
+	}
+
+	.notice {
+		margin: 0;
+		padding: var(--space-3);
+		font-size: var(--text-small);
+		background: var(--accent-soft);
+		border-left: 3px solid var(--accent);
+		border-radius: var(--radius-sm);
+	}
+
+	.start {
+		align-self: stretch;
+		font-size: var(--text-title);
+		padding-block: var(--space-4);
 	}
 
 	.progress-track {
-		height: 0.75rem;
-		border: 1px solid;
-		border-radius: 999px;
+		height: 0.6rem;
+		background: var(--surface-sunken);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-pill);
 		overflow: hidden;
 	}
 
 	.progress-fill {
 		height: 100%;
-		background: currentColor;
-		transition: width 0.2s ease;
+		background: var(--accent);
+		transition: width var(--dur) var(--ease);
+	}
+
+	.status {
+		margin: 0;
+		font-size: var(--text-small);
+		color: var(--ink-muted);
+		font-variant-numeric: tabular-nums;
 	}
 
 	@media (prefers-reduced-motion: reduce) {

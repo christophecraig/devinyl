@@ -1,0 +1,471 @@
+/**
+ * Design tokens + base styles — technical-spec §102 ("vanilla CSS with custom
+ * properties (design tokens), no CSS framework", mobile-first, AA contrast in
+ * both themes by construction).
+ *
+ * Visual identity: warm print. Cream paper, ink text, one burnt-orange accent,
+ * an editorial serif for display type and a system sans for everything the
+ * player has to read fast. The record-sleeve feel comes from paper texture and
+ * rules, never from decorative images — no webfonts, no external requests.
+ *
+ * ## Contrast is a property of this file
+ *
+ * Every foreground/background pair below is chosen to clear WCAG AA (4.5:1 for
+ * body text, 3:1 for large text and UI boundaries) in *both* themes, so pages
+ * never have to audit their own colours (A11Y-6). If you add a colour, put it
+ * here with its measured ratio in a comment, and pair it only with the surface
+ * it was measured against.
+ *
+ * ## Semantic layer, not a palette dump
+ *
+ * Components consume `--surface`, `--ink`, `--accent` etc., never raw hex.
+ * That is what makes the dark theme a single block of overrides at the bottom
+ * of `:root` rather than a per-component `@media` rule in nine files.
+ */
+
+:root {
+	color-scheme: light dark;
+
+	/* --- Palette: light (default) ------------------------------------------
+	   Ratios measured against --surface (#f6f1e7) unless noted. */
+	--surface: #f6f1e7; /* cream paper */
+	--surface-raised: #fffdf8; /* card stock, sits above the page */
+	--surface-sunken: #ece4d6; /* inset wells, progress tracks */
+	--ink: #1a1714; /* 14.9:1 */
+	--ink-muted: #5c534a; /* 6.6:1  — secondary copy, labels */
+	--ink-faint: #6f6659; /* 5.0:1  — recessive but still AA at body size */
+	--rule: #d8cdb9; /* hairlines, borders (non-text) */
+	--rule-strong: #b8a98f;
+
+	--accent: #b4471f; /* 4.9:1 — fills, bars, large text */
+	--accent-ink: #8f3614; /* 7.0:1 — accent-coloured body text */
+	--accent-soft: #f2ddd0; /* accent wash behind ink */
+	--on-accent: #fff8ee; /* 5.0:1 on --accent */
+
+	--positive: #2f6b3a; /* 5.6:1 — "locked in", correct */
+	--positive-soft: #dde9dc;
+	--negative: #9e2b1e; /* 6.6:1 — rejected, errors */
+	--negative-soft: #f6dcd6;
+
+	/* --- Type -------------------------------------------------------------- */
+	--font-display: ui-serif, Georgia, 'Iowan Old Style', 'Palatino Linotype', Palatino, serif;
+	--font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+	/* Fluid display sizes: mobile-first, capped so a desktop viewport doesn't
+	   turn the countdown into wall art. */
+	--text-hero: clamp(2.25rem, 1.6rem + 3.2vw, 3.25rem);
+	--text-display: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+	--text-title: clamp(1.15rem, 1.05rem + 0.5vw, 1.35rem);
+	--text-body: 1rem;
+	--text-small: 0.875rem;
+	--text-micro: 0.75rem;
+
+	/* --- Space, shape, depth ----------------------------------------------- */
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-5: 1.5rem;
+	--space-6: 2rem;
+	--space-7: 3rem;
+
+	/* Print-ish: small radii. Pills are reserved for tracks and badges. */
+	--radius-sm: 3px;
+	--radius-md: 5px;
+	--radius-lg: 8px;
+	--radius-pill: 999px;
+
+	--shadow-card: 0 1px 2px rgb(26 23 20 / 0.06), 0 6px 16px -8px rgb(26 23 20 / 0.18);
+	--shadow-lift: 0 2px 4px rgb(26 23 20 / 0.08), 0 14px 28px -12px rgb(26 23 20 / 0.28);
+
+	--measure: 32rem; /* the one column width every screen shares */
+
+	--ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+	--dur-fast: 120ms;
+	--dur: 220ms;
+	--dur-slow: 420ms;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		/* Dark = a dim listening room, not a black void: the hues stay warm so
+		   the accent still reads as burnt orange rather than neon.
+		   Ratios measured against --surface (#14110d). */
+		--surface: #14110d;
+		--surface-raised: #1f1a15;
+		--surface-sunken: #0e0c09;
+		--ink: #f2eadb; /* 15.9:1 */
+		--ink-muted: #b8ab97; /* 8.4:1 */
+		--ink-faint: #9c907c; /* 6.0:1 */
+		--rule: #3a322a;
+		--rule-strong: #574c40;
+
+		--accent: #e8703f; /* 6.2:1 */
+		--accent-ink: #f08c5e; /* 8.0:1 — body text weight on dark */
+		--accent-soft: #38231a;
+		--on-accent: #180f0a; /* 6.2:1 on --accent */
+
+		--positive: #6fbf7f; /* 8.9:1 */
+		--positive-soft: #1b2a1e;
+		--negative: #f0806f; /* 7.6:1 */
+		--negative-soft: #331914;
+
+		--shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 6px 16px -8px rgb(0 0 0 / 0.6);
+		--shadow-lift: 0 2px 4px rgb(0 0 0 / 0.45), 0 14px 28px -12px rgb(0 0 0 / 0.7);
+	}
+}
+
+/* --- Reset-ish ----------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	min-height: 100dvh;
+	background-color: var(--surface);
+	/* Vinyl groove: two barely-there sweeps of the accent, fixed to the
+	   viewport so the texture doesn't slide around under scrolling content.
+	   Pure gradients — no image request, and it degrades to flat cream if the
+	   browser can't paint it. */
+	background-image:
+		radial-gradient(
+			120% 90% at 50% -20%,
+			color-mix(in srgb, var(--accent) 9%, transparent),
+			transparent 60%
+		),
+		repeating-radial-gradient(
+			circle at 50% -10%,
+			color-mix(in srgb, var(--ink) 3%, transparent) 0 1px,
+			transparent 1px 9px
+		);
+	background-attachment: fixed;
+	color: var(--ink);
+	font-family: var(--font-body);
+	font-size: var(--text-body);
+	line-height: 1.55;
+	-webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+	font-family: var(--font-display);
+	font-weight: 600;
+	line-height: 1.15;
+	letter-spacing: -0.01em;
+	text-wrap: balance;
+	margin: 0;
+}
+
+h1 {
+	font-size: var(--text-display);
+}
+
+h2 {
+	font-size: var(--text-title);
+}
+
+p {
+	text-wrap: pretty;
+}
+
+a {
+	color: var(--accent-ink);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
+}
+
+a:hover {
+	color: var(--accent);
+}
+
+img {
+	max-width: 100%;
+	height: auto;
+}
+
+/* One focus treatment for the whole app. `:focus-visible` (not `:focus`) so
+   the programmatic focus moves on phase changes — sections with tabindex="-1",
+   see the play route's A11Y-3 wiring — don't paint a ring nobody asked for,
+   while every keyboard user still gets one on real controls. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+	border-radius: var(--radius-sm);
+}
+
+/* --- Shared primitives ---------------------------------------------------- */
+
+/* The column. Every screen's <main> is this shape, so the app reads as one
+   continuous sheet of paper rather than a set of differently-sized pages. */
+.sheet {
+	width: 100%;
+	max-width: var(--measure);
+	margin-inline: auto;
+	padding: var(--space-5) var(--space-4) var(--space-7);
+}
+
+.card {
+	background: var(--surface-raised);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-card);
+	padding: var(--space-4);
+}
+
+.eyebrow {
+	font-family: var(--font-body);
+	font-size: var(--text-micro);
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--ink-muted);
+	margin: 0;
+}
+
+.muted {
+	color: var(--ink-muted);
+}
+
+/* A hairline with a dot on it — the app's one recurring ornament, echoing a
+   stylus resting on a groove. */
+.rule {
+	position: relative;
+	height: 1px;
+	background: var(--rule);
+	border: 0;
+	margin: 0;
+}
+
+.rule::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 5px;
+	height: 5px;
+	border-radius: var(--radius-pill);
+	background: var(--accent);
+	transform: translateY(-50%);
+}
+
+/* --- Buttons -------------------------------------------------------------- */
+
+button,
+.btn {
+	font: inherit;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	padding: var(--space-3) var(--space-5);
+	border-radius: var(--radius-md);
+	border: 1px solid var(--accent);
+	background: transparent;
+	color: var(--accent-ink);
+	cursor: pointer;
+	transition:
+		background-color var(--dur-fast) var(--ease),
+		color var(--dur-fast) var(--ease),
+		border-color var(--dur-fast) var(--ease),
+		transform var(--dur-fast) var(--ease);
+}
+
+/* `.btn` exists so a link that acts as a call to action (e.g. "Play again",
+   which is a navigation and must stay an <a>) looks identical to a button
+   without being announced as one. */
+.btn {
+	display: inline-block;
+	text-align: center;
+	text-decoration: none;
+}
+
+button:hover:not(:disabled),
+.btn:hover {
+	background: var(--accent-soft);
+	color: var(--accent-ink);
+}
+
+button:active:not(:disabled) {
+	transform: translateY(1px);
+}
+
+button:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+/* The one action that moves the game forward on each screen. */
+button.primary {
+	background: var(--accent);
+	color: var(--on-accent);
+	border-color: var(--accent);
+	box-shadow: var(--shadow-card);
+}
+
+button.primary:hover:not(:disabled) {
+	background: var(--accent-ink);
+	border-color: var(--accent-ink);
+	color: var(--on-accent);
+}
+
+button.quiet {
+	border-color: transparent;
+	color: var(--ink-muted);
+	padding-inline: var(--space-3);
+}
+
+button.quiet:hover:not(:disabled) {
+	background: var(--surface-sunken);
+	color: var(--ink);
+}
+
+/* --- Form controls -------------------------------------------------------- */
+
+/* Underline inputs, not boxes: less chrome on a screen the player is scanning
+   under time pressure, and it keeps the page reading like a printed form. */
+input[type='text'],
+select {
+	font: inherit;
+	width: 100%;
+	padding: var(--space-2) var(--space-1);
+	color: var(--ink);
+	background: transparent;
+	border: 0;
+	border-bottom: 2px solid var(--rule-strong);
+	border-radius: 0;
+	transition:
+		border-color var(--dur-fast) var(--ease),
+		background-color var(--dur-fast) var(--ease);
+}
+
+input[type='text']:hover:not(:disabled),
+select:hover {
+	border-bottom-color: var(--ink-faint);
+}
+
+/* Focus keeps the app's standard outline ring (from the `:focus-visible` rule
+   above) rather than a bespoke treatment. Two earlier attempts were worse: a
+   background wash turns these tall, display-sized answer fields into
+   conspicuous empty blocks, and thickening the underline shifts the field's
+   height by a pixel on every focus. The accent underline here is colour only,
+   layered under the ring — never the sole focus indicator. */
+input[type='text']:focus-visible,
+select:focus-visible {
+	border-bottom-color: var(--accent);
+}
+
+input[type='text']:disabled {
+	color: var(--ink-muted);
+	border-bottom-style: dashed;
+}
+
+input[type='text']::placeholder {
+	color: var(--ink-faint);
+}
+
+input[aria-invalid='true'] {
+	border-bottom-color: var(--negative);
+}
+
+select {
+	appearance: none;
+	padding-right: var(--space-5);
+	background-image:
+		linear-gradient(45deg, transparent 50%, currentColor 50%),
+		linear-gradient(135deg, currentColor 50%, transparent 50%);
+	background-position:
+		calc(100% - 10px) calc(50% + 2px),
+		calc(100% - 5px) calc(50% + 2px);
+	background-size:
+		5px 5px,
+		5px 5px;
+	background-repeat: no-repeat;
+}
+
+label {
+	font-size: var(--text-small);
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--ink-muted);
+}
+
+input[type='range'] {
+	width: 100%;
+	accent-color: var(--accent);
+}
+
+fieldset {
+	margin: 0;
+	border: 1px solid var(--rule);
+	border-radius: var(--radius-md);
+}
+
+legend {
+	font-size: var(--text-small);
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: var(--ink-muted);
+}
+
+/* --- Motion --------------------------------------------------------------- */
+
+/* Shared entrances for phase content. Each screen opts in by name so a phase
+   that shouldn't move (an error, a retry) simply doesn't apply it.
+ *
+ * ## Transform-only, deliberately — do not add `opacity` here
+ *
+ * An element fading in spends the whole animation at a partial opacity, which
+ * means its text is genuinely below AA contrast for those frames — not a
+ * test artifact, a real (if brief) accessibility defect. The axe gate (A11Y-1,
+ * `e2e/home.e2e.ts` + `e2e/axe-routes.e2e.ts`) samples the page at an
+ * arbitrary moment and caught exactly that: a cream label on a half-faded
+ * accent button measured 1.86:1. Sliding costs nothing in contrast, so every
+ * entrance in this app moves rather than fades.
+ */
+@keyframes rise {
+	from {
+		transform: translateY(8px);
+	}
+	to {
+		transform: none;
+	}
+}
+
+/* Overshoots *upward* only, and only barely: `stamp` lands on the score total,
+ * which is hero-sized text in a viewport-width column. Starting above 1 (the
+ * obvious way to write a stamp) scaled a four-digit score straight off the left
+ * edge of a 420px screen — the overshoot has to stay inside the column's own
+ * padding, so it grows into place instead of slamming down onto it. */
+@keyframes stamp {
+	0% {
+		transform: scale(0.86);
+	}
+	65% {
+		transform: scale(1.04);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+
+/* One global off-switch. Individual components still declare their own
+   reduced-motion rules where they animate non-transform properties, but this
+   catches everything built on the shared keyframes above. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+		scroll-behavior: auto !important;
+	}
+}

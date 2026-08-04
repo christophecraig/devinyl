@@ -58,43 +58,31 @@
 		aria-describedby={ERROR_ID}
 	/>
 	<p id={ERROR_ID} aria-live="polite" class="error">{error ?? ''}</p>
-	<button type="submit">Continue</button>
+	<button class="primary" type="submit">Continue</button>
 </form>
 
 <style>
 	form {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		max-width: 20rem;
-	}
-
-	label {
-		font-weight: 600;
+		gap: var(--space-2);
+		max-width: 22rem;
 	}
 
 	input {
-		padding: 0.5rem;
-		font-size: 1rem;
-		border: 1px solid;
-		border-radius: 0.25rem;
-	}
-
-	input[aria-invalid='true'] {
-		border-color: #c0392b;
+		font-size: var(--text-title);
+		font-family: var(--font-display);
 	}
 
 	.error {
 		min-height: 1.2em;
 		margin: 0;
-		font-size: 0.875rem;
-		color: #c0392b;
+		font-size: var(--text-small);
+		color: var(--negative);
 	}
 
 	button {
 		align-self: flex-start;
-		padding: 0.5rem 1rem;
-		font-size: 1rem;
-		cursor: pointer;
+		margin-top: var(--space-2);
 	}
 </style>
