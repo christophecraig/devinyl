@@ -73,7 +73,7 @@ export class DeezerProvider implements CatalogProvider {
 	private readonly throttle: Throttle;
 
 	constructor(opts: DeezerProviderOptions = {}) {
-		this.fetchImpl = opts.fetch ?? fetch;
+		this.fetchImpl = opts.fetch ?? fetch.bind(globalThis);
 		this.cache = opts.cache;
 		this.throttle = new Throttle(opts.throttle);
 	}
