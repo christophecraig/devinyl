@@ -35,8 +35,12 @@ export const user = sqliteTable(
 		email: text('email').notNull(),
 		emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
 		image: text('image'),
-		createdAt: integer('created_at').notNull().default(now),
-		updatedAt: integer('updated_at').notNull().default(now),
+		// `timestamp_ms` (not the schema's usual bare `integer`) because Better
+		// Auth's own adapter writes these as JS `Date` objects — the mode is what
+		// makes Drizzle convert them to/from unix ms automatically. Every other
+		// table in this file stores plain-number ms and stays bare `integer`.
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now),
 
 		// --- app extensions (§6, ACC-5, LEGAL-1, A11Y-5, §15) ---
 		displayName: text('display_name').notNull(),
@@ -80,11 +84,11 @@ export const session = sqliteTable(
 			.notNull()
 			.references(() => user.id, { onDelete: 'cascade' }),
 		token: text('token').notNull(),
-		expiresAt: integer('expires_at').notNull(),
+		expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
 		ipAddress: text('ip_address'),
 		userAgent: text('user_agent'),
-		createdAt: integer('created_at').notNull().default(now),
-		updatedAt: integer('updated_at').notNull().default(now)
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now)
 	},
 	(t) => [uniqueIndex('idx_session_token').on(t.token), index('idx_session_user').on(t.userId)]
 );
@@ -101,13 +105,13 @@ export const account = sqliteTable(
 		providerId: text('provider_id').notNull(),
 		accessToken: text('access_token'),
 		refreshToken: text('refresh_token'),
-		accessTokenExpiresAt: integer('access_token_expires_at'),
-		refreshTokenExpiresAt: integer('refresh_token_expires_at'),
+		accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp_ms' }),
+		refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp_ms' }),
 		scope: text('scope'),
 		idToken: text('id_token'),
 		password: text('password'),
-		createdAt: integer('created_at').notNull().default(now),
-		updatedAt: integer('updated_at').notNull().default(now)
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now)
 	},
 	(t) => [
 		index('idx_account_user').on(t.userId),
@@ -121,9 +125,9 @@ export const verification = sqliteTable(
 		id: text('id').primaryKey(),
 		identifier: text('identifier').notNull(),
 		value: text('value').notNull(),
-		expiresAt: integer('expires_at').notNull(),
-		createdAt: integer('created_at').notNull().default(now),
-		updatedAt: integer('updated_at').notNull().default(now)
+		expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(now),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(now)
 	},
 	(t) => [index('idx_verification_identifier').on(t.identifier)]
 );

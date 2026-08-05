@@ -5,3 +5,17 @@
 # Keys the FAIR-7 daily_guest_claim IP hash (§6). Any non-empty string works
 # locally; production uses a 32-byte random secret.
 IP_HASH_SECRET="dev-placeholder-not-a-secret"
+
+# Better Auth session/cookie signing (§12, plan task 2.2). Any non-empty
+# string works locally; production uses a 32-byte random secret.
+BETTER_AUTH_SECRET="dev-placeholder-not-a-secret-32-bytes-min"
+BETTER_AUTH_URL="http://localhost:5173"
+
+# Google OAuth (ACC-3, plan task 2.1 [USER]). Leave blank locally — the
+# provider is only registered when both are set; email+password still works.
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+
+# Resend verification email (plan task 2.1 [USER]). Leave blank locally —
+# sendEmail() logs instead of calling the API when this is unset.
+RESEND_API_KEY=""
