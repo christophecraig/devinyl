@@ -29,6 +29,10 @@ import {
 	rateLimit,
 	user
 } from '../db/schema.js';
+import { checkDailyPublicationGap } from '../daily.js';
+import { snapshotWeeklyRanks } from '../weekly.js';
+import { aggregateMetricsDaily } from '../metrics.js';
+import { parisDayOffset } from '../time.js';
 
 export type JobKind = 'every-15-min' | 'hourly' | 'daily';
 
@@ -286,10 +290,27 @@ export async function runJobs(kind: JobKind, platform: App.Platform): Promise<vo
 			report(kind, results);
 			return;
 		}
-		case 'daily':
-			// TODO(3.1, 3.8, 3.11, 4.2): daily-quiz publication check, weekly ladder snapshot,
-			// metrics_daily aggregation, availability re-check
+		case 'daily': {
+			const db = getDb(platform);
+			const now = Date.now();
+			const yesterday = parisDayOffset(now, -1);
+
+			const results = [
+				await runOne('check-daily-publication-gap', async () => {
+					const { ok } = await checkDailyPublicationGap(db, now);
+					return ok ? 1 : 0;
+				}),
+				await runOne('snapshot-weekly-ranks', () => snapshotWeeklyRanks(db, now)),
+				await runOne('aggregate-metrics-daily', async () => {
+					await aggregateMetricsDaily(db, yesterday, now);
+					return 1;
+				})
+				// TODO(4.2): availability re-check job for official/daily quizzes.
+			];
+
+			report(kind, results);
 			return;
+		}
 		default:
 			kind satisfies never;
 	}

@@ -36,10 +36,49 @@ export function parisDay(now: number = Date.now()): string {
  * of one.
  */
 export function parisDayOffset(now: number, offsetDays: number): string {
-	const [year, month, day] = parisDay(now).split('-').map(Number);
-	const date = new Date(Date.UTC(year, month - 1, day));
-	date.setUTCDate(date.getUTCDate() + offsetDays);
-	return date.toISOString().slice(0, 10);
+	return shiftParisDay(parisDay(now), offsetDays);
+}
+
+/**
+ * Calendar-day arithmetic on an already-formatted `YYYY-MM-DD` day key, with
+ * no `now` involved — the streak run-length walk (task 3.4) needs to step
+ * backward from an arbitrary stored day, not from "now". Same exactness
+ * argument as `parisDayOffset`: a day boundary is a day boundary regardless
+ * of Paris's own DST shifts.
+ */
+export function shiftParisDay(day: string, offsetDays: number): string {
+	const [year, month, date] = day.split('-').map(Number);
+	const d = new Date(Date.UTC(year, month - 1, date));
+	d.setUTCDate(d.getUTCDate() + offsetDays);
+	return d.toISOString().slice(0, 10);
+}
+
+/**
+ * The Unix-ms instant Europe/Paris midnight begins for `day` — the metrics
+ * aggregation job (task 3.11) needs a `[start, end)` ms range to bucket
+ * `game_session.started_at` by Paris calendar day, and there's no cheap
+ * closed-form inverse of `Intl.DateTimeFormat` for that. Binary search
+ * instead: `parisDay(ms)` is monotonic in `ms`, so bisecting a window known
+ * to straddle the boundary finds it exactly, DST included.
+ */
+export function parisDayStartMs(day: string): number {
+	const guess = Date.parse(`${day}T00:00:00.000Z`);
+	// Paris is UTC+1 (winter) or UTC+2 (summer), so the real boundary sits
+	// within a couple of hours of the UTC guess either side — 6h of slack on
+	// each end guarantees `lo` lands the day before and `hi` lands on `day`.
+	let lo = guess - 6 * 60 * 60 * 1000;
+	let hi = guess + 6 * 60 * 60 * 1000;
+	while (hi - lo > 1) {
+		const mid = Math.floor((lo + hi) / 2);
+		if (parisDay(mid) < day) lo = mid;
+		else hi = mid;
+	}
+	return hi;
+}
+
+/** `[start, end)` ms range covering every instant that falls on `day` in Europe/Paris. */
+export function parisDayRangeMs(day: string): { startMs: number; endMs: number } {
+	return { startMs: parisDayStartMs(day), endMs: parisDayStartMs(shiftParisDay(day, 1)) };
 }
 
 const partsFormatter = new Intl.DateTimeFormat('en-CA', {

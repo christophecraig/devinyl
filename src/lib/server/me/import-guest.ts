@@ -36,12 +36,13 @@ import type { Db } from '../db/index.js';
 import {
 	gameSession,
 	importedHistory,
+	metricsDaily,
 	quiz,
 	quizTrack,
 	weeklyPoints as weeklyPointsTable
 } from '../db/schema.js';
 import { maxPossibleScore, weeklyPoints as weeklyPointsContribution } from '$lib/game/scoring.js';
-import { parisIsoWeek } from '../time.js';
+import { parisDay, parisIsoWeek } from '../time.js';
 import type { ImportGuestBody } from '$lib/game/schemas.js';
 
 type GameSessionRow = typeof gameSession.$inferSelect;
@@ -120,7 +121,12 @@ async function backfillWeeklyPoints(db: Db, userId: string, sessionIds: string[]
 			.where(eq(quizTrack.quizId, row.quizId));
 		const rounds = trackRows.map(() => ({ skipped: false, clipMs: 0 }));
 
-		const max = maxPossibleScore(rounds, row.guessTarget, row.effectiveScoringMode, row.curveVersion);
+		const max = maxPossibleScore(
+			rounds,
+			row.guessTarget,
+			row.effectiveScoringMode,
+			row.curveVersion
+		);
 		const contribution = weeklyPointsContribution(row.totalScore, max, row.dailyDay !== null);
 		if (contribution === 0) continue;
 
@@ -208,6 +214,17 @@ export async function importGuest(
 
 	// Step 4 — local-only history, purely additive stats (never boards).
 	await importLocalHistory(db, userId, body.history);
+
+	// MET-1 guest→account conversion — recorded here, at the instant it's
+	// true, because there is no later point a guest id can be traced back to
+	// (module doc). Counts only (MET-3): the day, not who.
+	await db
+		.insert(metricsDaily)
+		.values({ day: parisDay(), metric: 'guest_account_conversion', value: 1 })
+		.onConflictDoUpdate({
+			target: [metricsDaily.day, metricsDaily.metric],
+			set: { value: sql`${metricsDaily.value} + 1` }
+		});
 
 	return {
 		reattributedSessions: reattributed.length,

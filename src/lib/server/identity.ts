@@ -44,6 +44,17 @@ export function requirePlayer(locals: App.Locals): Player {
 	apiError('unauthorized', 'Sign in or send a guest id to play.');
 }
 
+/**
+ * Same resolution as `requirePlayer`, but for public reads (SHARE-2: anyone
+ * with a link can see a board with no account and no guest id at all) —
+ * `null` rather than a 401 when neither identity is present.
+ */
+export function optionalPlayer(locals: App.Locals): Player | null {
+	if (locals.userId) return { kind: 'user', userId: locals.userId, guestId: null };
+	if (locals.guestId) return { kind: 'guest', userId: null, guestId: locals.guestId };
+	return null;
+}
+
 /** Resolve the signed-in account for a route that requires one — never a guest. */
 export function requireUserId(locals: App.Locals): string {
 	if (!locals.userId) apiError('unauthorized', 'Sign in to do this.');
