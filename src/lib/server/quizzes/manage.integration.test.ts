@@ -241,7 +241,10 @@ describe('quizzes/manage (tasks 2.6/2.7/2.8)', () => {
 		it('claims an unowned generated quiz and clears its TTL', async () => {
 			const player = await createUser(db);
 			const { quiz: quizRow } = await createQuiz(db, { ownerId: null, kind: 'generated' });
-			await db.update(quiz).set({ ephemeralUntil: Date.now() + 1000 }).where(eq(quiz.id, quizRow.id));
+			await db
+				.update(quiz)
+				.set({ ephemeralUntil: Date.now() + 1000 })
+				.where(eq(quiz.id, quizRow.id));
 
 			await saveGeneratedQuiz(db, quizRow.id, player.id);
 

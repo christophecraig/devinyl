@@ -10,6 +10,7 @@
 	 */
 	import { untrack } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { completeProfile, ApiError } from '$lib/client/api.js';
 	import { MIN_SIGNUP_AGE } from '$lib/game/types.js';
 	import { m } from '$lib/paraglide/messages.js';
@@ -37,7 +38,7 @@
 		try {
 			await completeProfile({ displayName, birthYear });
 			await invalidateAll();
-			await goto('/');
+			await goto(resolve('/'));
 		} catch (err) {
 			error = err instanceof ApiError ? err.message : m.api_error_internal();
 		} finally {

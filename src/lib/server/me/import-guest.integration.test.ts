@@ -102,7 +102,11 @@ describe('importGuest (task 2.5)', () => {
 	});
 
 	it('imports local-only history as imported_history, resolving quizName/rounds/isDaily server-side', async () => {
-		const { quiz: quizRow } = await createQuiz(db, { kind: 'official', trackCount: 4, name: 'Année 2013' });
+		const { quiz: quizRow } = await createQuiz(db, {
+			kind: 'official',
+			trackCount: 4,
+			name: 'Année 2013'
+		});
 		const player = await createUser(db);
 
 		const result = await importGuest(db, player.id, {
@@ -132,7 +136,7 @@ describe('importGuest (task 2.5)', () => {
 		expect(deleted?.rounds).toBe(0);
 	});
 
-	it('never double-credits weekly_points for a session that was already the account\'s own', async () => {
+	it("never double-credits weekly_points for a session that was already the account's own", async () => {
 		const { quiz: quizRow } = await createQuiz(db, { kind: 'daily' });
 		const player = await createUser(db);
 

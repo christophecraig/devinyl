@@ -12,7 +12,15 @@ import {
 	resetDb,
 	testDb
 } from '../test-utils.integration.js';
-import { account, friendship, gameSession, quiz, session, user, weeklyPoints } from '../db/schema.js';
+import {
+	account,
+	friendship,
+	gameSession,
+	quiz,
+	session,
+	user,
+	weeklyPoints
+} from '../db/schema.js';
 import { purgeDeletedUserTombstones } from '../jobs/index.js';
 import { DELETED_EMAIL_HASH_TTL_MS, deleteAccount } from './delete-account.js';
 
@@ -58,7 +66,9 @@ describe('deleteAccount (task 2.11)', () => {
 			displayNameNormalized: 'friend'
 		});
 		const [a, b] = [victim.id, friend.id].sort();
-		await db.insert(friendship).values({ aUserId: a, bUserId: b, status: 'accepted', requestedBy: a });
+		await db
+			.insert(friendship)
+			.values({ aUserId: a, bUserId: b, status: 'accepted', requestedBy: a });
 		await db.insert(weeklyPoints).values({ userId: victim.id, week: '2026-W32', points: 100 });
 
 		await deleteAccount(db, victim.id, SECRET);
@@ -150,7 +160,10 @@ describe('purgeDeletedUserTombstones (task 2.11 purge)', () => {
 
 	it('never touches a live (non-deleted) user', async () => {
 		const live = await createUser(db);
-		const removed = await purgeDeletedUserTombstones(db, Date.now() + 100 * DELETED_EMAIL_HASH_TTL_MS);
+		const removed = await purgeDeletedUserTombstones(
+			db,
+			Date.now() + 100 * DELETED_EMAIL_HASH_TTL_MS
+		);
 		expect(removed).toBe(0);
 		expect(await db.select().from(user).where(eq(user.id, live.id))).toHaveLength(1);
 	});

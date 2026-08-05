@@ -30,7 +30,10 @@ export async function publishOfficial(
 	const [row] = await db.select().from(quiz).where(eq(quiz.id, quizId)).limit(1);
 	if (!row || row.deletedAt !== null) apiError('not_found', 'That quiz could not be found.');
 	if (row.kind === 'daily') {
-		apiError('bad_request', 'This quiz is already scheduled as a daily — publish it as official first.');
+		apiError(
+			'bad_request',
+			'This quiz is already scheduled as a daily — publish it as official first.'
+		);
 	}
 
 	await db
@@ -66,9 +69,13 @@ export async function listOfficialQuizzes(db: Db) {
 
 export async function scheduleDaily(db: Db, day: string, quizId: string): Promise<void> {
 	const [quizRow] = await db.select().from(quiz).where(eq(quiz.id, quizId)).limit(1);
-	if (!quizRow || quizRow.deletedAt !== null) apiError('not_found', 'That quiz could not be found.');
+	if (!quizRow || quizRow.deletedAt !== null)
+		apiError('not_found', 'That quiz could not be found.');
 	if (quizRow.kind !== 'official' && quizRow.kind !== 'daily') {
-		apiError('bad_request', 'Only an official quiz can be scheduled as a daily — publish it first.');
+		apiError(
+			'bad_request',
+			'Only an official quiz can be scheduled as a daily — publish it first.'
+		);
 	}
 
 	const [existing] = await db.select().from(dailyQuiz).where(eq(dailyQuiz.day, day)).limit(1);

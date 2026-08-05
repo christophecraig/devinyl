@@ -84,7 +84,11 @@ export async function deleteAccount(
 	secret: string,
 	now: number = Date.now()
 ): Promise<void> {
-	const [row] = await db.select({ email: user.email }).from(user).where(eq(user.id, userId)).limit(1);
+	const [row] = await db
+		.select({ email: user.email })
+		.from(user)
+		.where(eq(user.id, userId))
+		.limit(1);
 	if (!row) return; // Idempotent — a retried request after success is a no-op, not an error.
 
 	await db.delete(session).where(eq(session.userId, userId));
