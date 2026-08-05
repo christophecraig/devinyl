@@ -7,6 +7,8 @@
 	import { onMount } from 'svelte';
 	import PlayQuiz from '$lib/components/PlayQuiz.svelte';
 	import { getDaily, ApiError, type DailyInfo } from '$lib/client/api.js';
+	import { m } from '$lib/paraglide/messages.js';
+	import { localizeApiErrorCode } from '$lib/client/errors.js';
 
 	let daily = $state<DailyInfo | null>(null);
 	let error = $state<ApiError | null>(null);
@@ -17,23 +19,24 @@
 				daily = d;
 			})
 			.catch((err: unknown) => {
-				error = err instanceof ApiError ? err : new ApiError(0, 'network_error', 'Network error.');
+				error =
+					err instanceof ApiError ? err : new ApiError(0, 'network_error', m.home_error_network());
 			});
 	});
 </script>
 
 <svelte:head>
-	<title>Devinyl — Daily</title>
+	<title>{m.title_daily()}</title>
 </svelte:head>
 
 {#snippet dailyBanner()}
 	{#if daily}
 		<div class="daily-banner">
-			<p class="eyebrow">Devinyl #{daily.dayNumber}</p>
-			<h1>Today's quiz</h1>
+			<p class="eyebrow">{m.daily_eyebrow({ day: daily.dayNumber })}</p>
+			<h1>{m.daily_heading()}</h1>
 			{#if daily.alreadyPlayed}
 				<p class="muted">
-					You've already posted a scored run today — this replay won't count again.
+					{m.daily_already_played()}
 				</p>
 			{/if}
 		</div>
@@ -42,11 +45,11 @@
 
 {#if error}
 	<main class="sheet">
-		<p class="error-note">{error.message}</p>
+		<p class="error-note">{localizeApiErrorCode(error.code)}</p>
 	</main>
 {:else if !daily}
 	<main class="sheet">
-		<p class="waiting">Loading today's quiz…</p>
+		<p class="waiting">{m.daily_loading()}</p>
 	</main>
 {:else}
 	<PlayQuiz target={{ daily: true }} banner={dailyBanner} dailyDayNumber={daily.dayNumber} />

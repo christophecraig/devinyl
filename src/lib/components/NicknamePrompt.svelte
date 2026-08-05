@@ -14,6 +14,7 @@
 	 */
 	import { untrack } from 'svelte';
 	import { nicknameSchema } from '$lib/game/schemas.js';
+	import { m } from '$lib/paraglide/messages.js';
 
 	let { initial = '', onsubmit }: { initial?: string; onsubmit: (name: string) => void } = $props();
 
@@ -28,9 +29,7 @@
 
 	function validate(name: string): string | null {
 		const parsed = nicknameSchema.safeParse(name);
-		return parsed.success
-			? null
-			: "Pick a nickname between 2 and 24 characters (letters, numbers, spaces, - . ' only).";
+		return parsed.success ? null : m.nickname_error();
 	}
 
 	function handleSubmit(event: SubmitEvent): void {
@@ -46,7 +45,7 @@
 </script>
 
 <form onsubmit={handleSubmit} novalidate>
-	<label for="nickname-prompt-input">Nickname</label>
+	<label for="nickname-prompt-input">{m.nickname_label()}</label>
 	<input
 		id="nickname-prompt-input"
 		name="nickname"
@@ -58,7 +57,7 @@
 		aria-describedby={ERROR_ID}
 	/>
 	<p id={ERROR_ID} aria-live="polite" class="error">{error ?? ''}</p>
-	<button class="primary" type="submit">Continue</button>
+	<button class="primary" type="submit">{m.nickname_continue()}</button>
 </form>
 
 <style>

@@ -10,6 +10,7 @@
  */
 
 import type { FinalizedRound } from './types.js';
+import { m } from '$lib/paraglide/messages.js';
 
 /** ROUND-4-shaped emoji per round: green = both correct, yellow = partial, red = missed/skipped. */
 function roundEmoji(round: Pick<FinalizedRound, 'skipped' | 'titleOk' | 'artistOk'>): string {
@@ -39,7 +40,8 @@ export interface DailyShareInput {
 /** DAILY-3: score, day number, per-round emoji row — never track names. */
 export function buildDailyShareText(input: DailyShareInput): string {
 	const emojiRow = input.rounds.map(roundEmoji).join('');
-	return `Devinyl #${input.dayNumber} — ${input.totalScore} pts\n${emojiRow}\n${input.url}`;
+	const heading = m.share_daily_text({ day: input.dayNumber, score: input.totalScore });
+	return `${heading}\n${emojiRow}\n${input.url}`;
 }
 
 export interface ChallengeShareInput {
@@ -50,5 +52,9 @@ export interface ChallengeShareInput {
 
 /** SHARE-4: challenge previews may show the challenger's nickname and score to beat — never track data. */
 export function buildChallengeShareText(input: ChallengeShareInput): string {
-	return `${input.challengerName} scored ${input.scoreToBeat} pts on Devinyl. Beat it?\n${input.url}`;
+	const heading = m.share_challenge_text({
+		name: input.challengerName,
+		score: input.scoreToBeat
+	});
+	return `${heading}\n${input.url}`;
 }

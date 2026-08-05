@@ -6,6 +6,7 @@
 	 */
 	import { createChallenge, ApiError } from '$lib/client/api.js';
 	import { resolve } from '$app/paths';
+	import { m } from '$lib/paraglide/messages.js';
 
 	interface Props {
 		sessionId: string;
@@ -32,7 +33,7 @@
 	}
 
 	async function share(): Promise<void> {
-		const text = `${nickname} scored ${scoreToBeat} pts on Devinyl. Beat it?`;
+		const text = m.share_challenge_text({ name: nickname, score: scoreToBeat });
 		const nav = navigator as Navigator & { share?: (data: ShareData) => Promise<void> };
 		if (nav.share) {
 			try {
@@ -48,15 +49,23 @@
 </script>
 
 {#if phase === 'idle'}
-	<button type="button" onclick={createLink}>Challenge a friend</button>
+	<button type="button" onclick={createLink}>{m.challenge_share_button()}</button>
 {:else if phase === 'creating'}
-	<button type="button" disabled>Creating link…</button>
+	<button type="button" disabled>{m.challenge_share_creating()}</button>
 {:else if phase === 'error'}
-	<button type="button" onclick={createLink}>Retry</button>
+	<button type="button" onclick={createLink}>{m.challenge_share_retry()}</button>
 {:else}
 	<div class="challenge-ready">
-		<button type="button" onclick={share}>{copied ? 'Copied!' : 'Share challenge link'}</button>
-		<input class="link-field" type="text" readonly value={url} aria-label="Challenge link" />
+		<button type="button" onclick={share}
+			>{copied ? m.daily_share_copied() : m.challenge_share_link_button()}</button
+		>
+		<input
+			class="link-field"
+			type="text"
+			readonly
+			value={url}
+			aria-label={m.challenge_share_link_label()}
+		/>
 	</div>
 {/if}
 

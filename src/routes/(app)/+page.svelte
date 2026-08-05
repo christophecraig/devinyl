@@ -26,6 +26,8 @@
 		DEFAULT_CHOICE_RETRY_PENALTY_SECONDS
 	} from '$lib/game/types.js';
 	import type { AnswerMode, ChoiceRetryMode, GuessTarget } from '$lib/game/types.js';
+	import { m } from '$lib/paraglide/messages.js';
+	import { localizeApiErrorCode } from '$lib/client/errors.js';
 
 	let mounted = $state(false);
 	let nickname = $state<string | null>(null);
@@ -64,7 +66,7 @@
 		apiError = null;
 
 		if (!decade && !genre.trim() && !artist.trim()) {
-			formError = 'Pick a decade, a genre, or an artist to build the quiz from.';
+			formError = m.home_error_no_filters();
 			return;
 		}
 
@@ -83,7 +85,8 @@
 			});
 			await goto(resolve('/(app)/play/[quizId]', { quizId }));
 		} catch (err) {
-			apiError = err instanceof ApiError ? err : new ApiError(0, 'network_error', 'Network error.');
+			apiError =
+				err instanceof ApiError ? err : new ApiError(0, 'network_error', m.home_error_network());
 		} finally {
 			submitting = false;
 		}
@@ -96,32 +99,31 @@
 
 <main class="sheet">
 	<div class="hero">
-		<p class="eyebrow">French repertoire · Blind test</p>
-		<h1>Name the track<br />before the clip runs out.</h1>
+		<p class="eyebrow">{m.home_eyebrow()}</p>
+		<h1>{m.home_h1_line1()}<br />{m.home_h1_line2()}</h1>
 		<p class="tagline">
-			Pick a decade, a genre or an artist. We'll cut ten clips and start the clock — the faster you
-			lock it in, the more it's worth.
+			{m.home_tagline()}
 		</p>
 	</div>
 
 	{#if mounted}
 		{#if nickname === null}
 			<section class="panel" aria-labelledby="nickname-heading">
-				<h2 id="nickname-heading">Pick a nickname to play</h2>
-				<p class="panel-note">No account, no email. It's just what the scoreboard calls you.</p>
+				<h2 id="nickname-heading">{m.home_nickname_heading()}</h2>
+				<p class="panel-note">{m.home_nickname_note()}</p>
 				<NicknamePrompt onsubmit={handleNicknameSubmit} />
 			</section>
 		{:else}
 			<section class="panel" aria-labelledby="generate-heading">
-				<h2 id="generate-heading">Playing as {nickname}</h2>
+				<h2 id="generate-heading">{m.home_playing_as({ nickname })}</h2>
 				<hr class="rule" />
 
 				<form onsubmit={handleSubmit}>
-					<p class="group-label">Build the quiz from</p>
+					<p class="group-label">{m.home_group_build()}</p>
 					<div class="field">
-						<label for="decade">Decade</label>
+						<label for="decade">{m.home_label_decade()}</label>
 						<select id="decade" bind:value={decade}>
-							<option value="">Any</option>
+							<option value="">{m.home_option_any()}</option>
 							{#each DECADE_OPTIONS as d (d)}
 								<option value={d}>{d}s</option>
 							{/each}
@@ -129,20 +131,30 @@
 					</div>
 
 					<div class="field">
-						<label for="genre">Genre</label>
-						<input id="genre" type="text" bind:value={genre} placeholder="e.g. chanson, rap" />
+						<label for="genre">{m.home_label_genre()}</label>
+						<input
+							id="genre"
+							type="text"
+							bind:value={genre}
+							placeholder={m.home_placeholder_genre()}
+						/>
 					</div>
 
 					<div class="field">
-						<label for="artist">Artist</label>
-						<input id="artist" type="text" bind:value={artist} placeholder="e.g. Stromae" />
+						<label for="artist">{m.home_label_artist()}</label>
+						<input
+							id="artist"
+							type="text"
+							bind:value={artist}
+							placeholder={m.home_placeholder_artist()}
+						/>
 					</div>
 
 					<hr class="rule" />
-					<p class="group-label">How it plays</p>
+					<p class="group-label">{m.home_group_how_it_plays()}</p>
 
 					<div class="field">
-						<label for="rounds">Rounds ({rounds})</label>
+						<label for="rounds">{m.home_label_rounds({ rounds })}</label>
 						<input id="rounds" type="range" min={MIN_ROUNDS} max={MAX_ROUNDS} bind:value={rounds} />
 						<div class="range-scale" aria-hidden="true">
 							<span>{MIN_ROUNDS}</span><span>{MAX_ROUNDS}</span>
@@ -150,35 +162,35 @@
 					</div>
 
 					<div class="field">
-						<label for="guessTarget">Guess</label>
+						<label for="guessTarget">{m.home_label_guess()}</label>
 						<select id="guessTarget" bind:value={guessTarget}>
-							<option value="both">Title & artist</option>
-							<option value="title">Title only</option>
-							<option value="artist">Artist only</option>
+							<option value="both">{m.home_option_guess_both()}</option>
+							<option value="title">{m.home_option_guess_title()}</option>
+							<option value="artist">{m.home_option_guess_artist()}</option>
 						</select>
 					</div>
 
 					<div class="field">
-						<label for="answerMode">Answer style</label>
+						<label for="answerMode">{m.home_label_answer_mode()}</label>
 						<select id="answerMode" bind:value={answerMode}>
-							<option value="text">Type the answer</option>
-							<option value="choice">Multiple choice</option>
+							<option value="text">{m.home_option_answer_text()}</option>
+							<option value="choice">{m.home_option_answer_choice()}</option>
 						</select>
 					</div>
 
 					{#if answerMode === 'choice'}
 						<div class="field">
-							<label for="choiceRetryMode">If you pick wrong</label>
+							<label for="choiceRetryMode">{m.home_label_retry_mode()}</label>
 							<select id="choiceRetryMode" bind:value={choiceRetryMode}>
-								<option value="oneShot">Lock in immediately — one shot</option>
-								<option value="penalty">Wait, then try again</option>
+								<option value="oneShot">{m.home_option_retry_oneshot()}</option>
+								<option value="penalty">{m.home_option_retry_penalty()}</option>
 							</select>
 						</div>
 
 						{#if choiceRetryMode === 'penalty'}
 							<div class="field">
 								<label for="choiceRetryPenaltySeconds">
-									Retry wait ({choiceRetryPenaltySeconds}s)
+									{m.home_label_retry_wait({ seconds: choiceRetryPenaltySeconds })}
 								</label>
 								<input
 									id="choiceRetryPenaltySeconds"
@@ -197,11 +209,11 @@
 
 					<p class="error" role="alert">{formError ?? ''}</p>
 					{#if apiError}
-						<p class="error" role="alert">{apiError.message}</p>
+						<p class="error" role="alert">{localizeApiErrorCode(apiError.code)}</p>
 					{/if}
 
 					<button class="primary start" type="submit" disabled={submitting}>
-						{submitting ? 'Generating…' : 'Generate quiz'}
+						{submitting ? m.home_button_generating() : m.home_button_generate()}
 					</button>
 				</form>
 			</section>

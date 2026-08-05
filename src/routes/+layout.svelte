@@ -17,6 +17,8 @@
 	import { resolve } from '$app/paths';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { signOut } from '$lib/client/api.js';
+	import { m } from '$lib/paraglide/messages.js';
+	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
 
 	let { data, children } = $props();
 
@@ -44,14 +46,16 @@
 			<span class="disc" aria-hidden="true"></span>
 			<span class="name">Devinyl</span>
 		</a>
-		<nav class="menu" aria-label="Primary">
-			<a href={resolve('/(app)/daily')}>Daily</a>
-			<a href={resolve('/(app)/stats')}>Stats</a>
+		<nav class="menu" aria-label={m.nav_primary_label()}>
+			<a href={resolve('/(app)/daily')}>{m.nav_daily()}</a>
+			<a href={resolve('/(app)/stats')}>{m.nav_stats()}</a>
 			{#if data.loggedIn}
-				<button type="button" class="link-button" onclick={handleSignOut}>Sign out</button>
+				<button type="button" class="link-button" onclick={handleSignOut}>{m.nav_sign_out()}</button
+				>
 			{:else}
-				<a href={resolve('/(app)/login')}>Sign in</a>
+				<a href={resolve('/(app)/login')}>{m.nav_sign_in()}</a>
 			{/if}
+			<LanguageSwitcher />
 		</nav>
 	</header>
 
@@ -60,7 +64,7 @@
 	</div>
 
 	<footer class="colophon">
-		<p>Devinyl — a French-repertoire music blind test.</p>
+		<p>{m.footer_tagline()}</p>
 	</footer>
 </div>
 

@@ -60,6 +60,8 @@
 		SessionManifest,
 		TargetName
 	} from '$lib/game/types.js';
+	import { m } from '$lib/paraglide/messages.js';
+	import { localizeApiErrorCode } from '$lib/client/errors.js';
 
 	/**
 	 * What's being played, mirroring `CreateSessionBody`'s "exactly one of
@@ -105,7 +107,7 @@
 			})
 			.catch((err: unknown) => {
 				sessionError =
-					err instanceof ApiError ? err : new ApiError(0, 'network_error', 'Network error.');
+					err instanceof ApiError ? err : new ApiError(0, 'network_error', m.home_error_network());
 			})
 			.finally(() => {
 				sessionLoading = false;
@@ -190,7 +192,7 @@
 			sessionError =
 				err instanceof Error
 					? new ApiError(0, 'internal', err.message)
-					: new ApiError(0, 'internal', 'Could not enable audio on this device.');
+					: new ApiError(0, 'internal', m.play_audio_unlock_failed());
 			return;
 		}
 
@@ -271,9 +273,9 @@
 	 * real, visible phase without game-state needing to know about it.
 	 */
 	async function runCountdown(): Promise<void> {
-		for (const tick of [3, 2, 1]) {
-			countdownValue = tick;
-			announcer.announce({ text: String(tick), politeness: 'assertive' });
+		for (const tickValue of [3, 2, 1]) {
+			countdownValue = tickValue;
+			announcer.announce({ text: String(tickValue), politeness: 'assertive' });
 			await delay(600);
 		}
 		countdownValue = null;
@@ -294,7 +296,7 @@
 				onEnded: () => {
 					activeHandle = null;
 					announcer.clipEnded();
-					announcer.announce({ text: 'Clip ended', politeness: 'assertive' });
+					announcer.announce({ text: m.announce_clip_ended(), politeness: 'assertive' });
 					game?.notifyClipEnded();
 				}
 			});
@@ -303,7 +305,7 @@
 			// round's clipMs against the known preview duration at finalize.
 			game?.reportClipDuration(audio.clipMs());
 			announcer.clipStarted();
-			announcer.announce({ text: 'Clip playing', politeness: 'assertive' });
+			announcer.announce({ text: m.announce_clip_playing(), politeness: 'assertive' });
 		},
 
 		stopClip() {
@@ -312,7 +314,7 @@
 			// stop() never fires onEnded (ROUND-3 early end) — the clip-end
 			// announcement has to happen from this same place instead.
 			announcer.clipEnded();
-			announcer.announce({ text: 'Clip ended', politeness: 'assertive' });
+			announcer.announce({ text: m.announce_clip_ended(), politeness: 'assertive' });
 		},
 
 		onRoundStart(position) {
@@ -355,7 +357,7 @@
 			});
 		} catch (err) {
 			finalizeError =
-				err instanceof ApiError ? err : new ApiError(0, 'network_error', 'Network error.');
+				err instanceof ApiError ? err : new ApiError(0, 'network_error', m.home_error_network());
 		} finally {
 			finalizePending = false;
 		}
@@ -392,9 +394,11 @@
 	);
 
 	function handleAttempt(target: TargetName, accepted: boolean): void {
-		const label = target === 'title' ? 'Title' : 'Artist';
+		const label = target === 'title' ? m.common_label_title() : m.common_label_artist();
 		announcer.announce({
-			text: accepted ? `${label} correct` : `${label} not that one`,
+			text: accepted
+				? m.announce_attempt_correct({ label })
+				: m.announce_attempt_incorrect({ label }),
 			politeness: 'assertive'
 		});
 	}
@@ -421,19 +425,26 @@
 				// this normally fires immediately — but staying deferUntilGap keeps
 				// it correct if that ordering ever changes.
 				announcer.announce({
-					text: `Reveal: ${pack.reveal.title} by ${pack.reveal.artists.join(', ')}`,
+					text: m.announce_reveal({
+						title: pack.reveal.title,
+						artists: pack.reveal.artists.join(', ')
+					}),
 					politeness: 'polite',
 					deferUntilGap: true
 				});
 			}
 		} else if (game.phase === 'scoreboard') {
 			announcer.announce({
-				text: `Round ${game.roundIndex + 1} of ${game.totalRoundCount}. Score so far: ${runningTotal}.`,
+				text: m.announce_scoreboard({
+					index: game.roundIndex + 1,
+					total: game.totalRoundCount,
+					score: runningTotal
+				}),
 				politeness: 'polite'
 			});
 		} else if (game.phase === 'summary') {
 			announcer.announce({
-				text: `Quiz complete. Score: ${runningTotal}.`,
+				text: m.announce_summary({ score: runningTotal }),
 				politeness: 'polite'
 			});
 		}
@@ -457,8 +468,10 @@
 
 {#if recoveredFinalize}
 	<div class="banner" role="status">
-		<p>A previous game's score ({recoveredFinalize.totalScore} pts) was submitted.</p>
-		<button class="quiet" type="button" onclick={() => (recoveredFinalize = null)}>Dismiss</button>
+		<p>{m.play_recovered_banner({ score: recoveredFinalize.totalScore })}</p>
+		<button class="quiet" type="button" onclick={() => (recoveredFinalize = null)}
+			>{m.common_dismiss()}</button
+		>
 	</div>
 {/if}
 
@@ -467,21 +480,21 @@
 		{@render banner()}
 	{/if}
 	{#if !mounted}
-		<p class="waiting">Loading…</p>
+		<p class="waiting">{m.common_loading()}</p>
 	{:else if nickname === null}
 		<section bind:this={phaseSectionEl} tabindex="-1">
-			<h1>Pick a nickname to play</h1>
+			<h1>{m.home_nickname_heading()}</h1>
 			<NicknamePrompt onsubmit={handleNicknameSubmit} />
 		</section>
 	{:else if sessionError}
 		<section bind:this={phaseSectionEl} tabindex="-1">
-			<h1>Couldn't start this quiz</h1>
-			<p class="error-note">{sessionError.message}</p>
-			<button type="button" onclick={ensureSession}>Retry</button>
+			<h1>{m.play_session_error_heading()}</h1>
+			<p class="error-note">{localizeApiErrorCode(sessionError.code)}</p>
+			<button type="button" onclick={ensureSession}>{m.common_retry()}</button>
 		</section>
 	{:else if !manifest}
 		<section bind:this={phaseSectionEl} tabindex="-1" aria-busy="true">
-			<p class="waiting">Preparing your quiz…</p>
+			<p class="waiting">{m.play_preparing()}</p>
 		</section>
 	{:else if !game}
 		<PreloadGate
@@ -494,20 +507,24 @@
 		/>
 	{:else if game.phase === 'countdown'}
 		<section bind:this={phaseSectionEl} tabindex="-1" class="countdown">
-			<h1 class="round-heading">Round {game.roundIndex + 1} of {game.totalRoundCount}</h1>
+			<h1 class="round-heading">
+				{m.play_round_heading({ index: game.roundIndex + 1, total: game.totalRoundCount })}
+			</h1>
 			{@render roundPips(game.roundIndex, game.totalRoundCount)}
 			<!-- Keyed so each tick re-mounts the number and re-runs its entrance;
 			     a plain text swap would animate once and then sit still. -->
 			{#key countdownValue}
 				<p class="countdown-number" aria-hidden="true">{countdownValue ?? ''}</p>
 			{/key}
-			<p class="countdown-note" aria-hidden="true">Get ready…</p>
+			<p class="countdown-note" aria-hidden="true">{m.play_countdown_ready()}</p>
 		</section>
 	{:else if game.phase === 'clip'}
 		<section bind:this={phaseSectionEl} tabindex="-1" class="clip">
-			<h1 class="round-heading">Round {game.roundIndex + 1} of {game.totalRoundCount}</h1>
+			<h1 class="round-heading">
+				{m.play_round_heading({ index: game.roundIndex + 1, total: game.totalRoundCount })}
+			</h1>
 			{@render roundPips(game.roundIndex, game.totalRoundCount)}
-			<p class="clip-note">Listen closely — the clip plays once.</p>
+			<p class="clip-note">{m.play_clip_note()}</p>
 			<div class="clip-timer" class:urgent={clipRemainingMs > 0 && clipRemainingMs < 5000}>
 				<div class="clip-timer-track" aria-hidden="true">
 					<div class="clip-timer-fill" style={`width: ${(clipProgress * 100).toFixed(2)}%`}></div>
@@ -517,7 +534,7 @@
 				     the clip start/end announcements already carry this for screen
 				     readers (see the clip-timer note in the script above). -->
 				<span class="clip-timer-label" aria-hidden="true"
-					>{Math.ceil(clipRemainingMs / 1000)}s left</span
+					>{m.play_clip_seconds_left({ seconds: Math.ceil(clipRemainingMs / 1000) })}</span
 				>
 			</div>
 			{#if manifest.settings.answerMode === 'choice'}
@@ -558,36 +575,41 @@
 		</section>
 	{:else if game.phase === 'scoreboard'}
 		<section bind:this={phaseSectionEl} tabindex="-1" class="scoreboard">
-			<h1 class="round-heading">Score so far</h1>
-			<p class="score-total">{runningTotal} pts</p>
+			<h1 class="round-heading">{m.play_scoreboard_heading()}</h1>
+			<p class="score-total">{m.play_score_pts({ score: runningTotal })}</p>
 			{@render roundPips(game.roundIndex + 1, game.totalRoundCount)}
-			<p class="muted">Round {game.roundIndex + 1} of {game.totalRoundCount} complete.</p>
-			<button class="primary wide" type="button" onclick={() => game?.advance()}>Continue</button>
+			<p class="muted">
+				{m.play_round_complete({ index: game.roundIndex + 1, total: game.totalRoundCount })}
+			</p>
+			<button class="primary wide" type="button" onclick={() => game?.advance()}
+				>{m.common_continue()}</button
+			>
 		</section>
 	{:else if game.phase === 'summary'}
 		<section bind:this={phaseSectionEl} tabindex="-1" class="summary">
-			<p class="eyebrow">That's the lot</p>
-			<h1>Quiz complete</h1>
+			<p class="eyebrow">{m.play_summary_eyebrow()}</p>
+			<h1>{m.play_summary_heading()}</h1>
 
 			{#if finalizePending}
-				<p class="waiting" role="status">Submitting your score…</p>
+				<p class="waiting" role="status">{m.play_submitting()}</p>
 			{:else if finalizeError}
 				<p class="error-note" role="alert">
-					Couldn't confirm your score with the server ({finalizeError.message}). Your local score is
-					shown below; it will be retried automatically next visit.
+					{m.play_finalize_error({ message: localizeApiErrorCode(finalizeError.code) })}
 				</p>
-				<button type="button" onclick={() => finishSession(game!.results)}>Retry</button>
+				<button type="button" onclick={() => finishSession(game!.results)}
+					>{m.common_retry()}</button
+				>
 			{:else if finalizeResult}
-				<p class="score-total final">{finalizeResult.totalScore} pts</p>
+				<p class="score-total final">{m.play_score_pts({ score: finalizeResult.totalScore })}</p>
 				{#if !finalizeResult.scored}
 					<p class="muted">
-						This run isn't posted to a board ({finalizeResult.scoredBlockReason}).
+						{m.play_not_on_board({ reason: finalizeResult.scoredBlockReason ?? '' })}
 					</p>
 				{/if}
 			{/if}
 
 			{#if !finalizeResult}
-				<p class="score-total final">{runningTotal} pts (local, unconfirmed)</p>
+				<p class="score-total final">{m.play_score_local({ score: runningTotal })}</p>
 			{/if}
 
 			<hr class="rule" />
@@ -595,9 +617,11 @@
 			<ul class="round-breakdown">
 				{#each game.results as result (result.position)}
 					<li class:skipped={result.skipped}>
-						<span>Round {result.position + 1}</span>
+						<span>{m.play_round_label({ index: result.position + 1 })}</span>
 						<span class="breakdown-points"
-							>{result.skipped ? 'Skipped' : `${roundPoints(result)} pts`}</span
+							>{result.skipped
+								? m.play_round_skipped()
+								: m.play_score_pts({ score: roundPoints(result) })}</span
 						>
 					</li>
 				{/each}
@@ -611,7 +635,7 @@
 				{#if finalizeResult}
 					<ChallengeShare
 						sessionId={finalizeResult.sessionId}
-						nickname={nickname ?? 'A friend'}
+						nickname={nickname ?? m.play_default_friend_nickname()}
 						scoreToBeat={finalizeResult.totalScore}
 					/>
 					{#if 'daily' in target && dailyDayNumber !== undefined}
@@ -623,13 +647,13 @@
 					{/if}
 				{/if}
 
-				<a class="btn" href={resolve('/')}>Play again</a>
+				<a class="btn" href={resolve('/')}>{m.play_play_again()}</a>
 			</div>
 		</section>
 	{:else if game.phase === 'abandoned'}
 		<section bind:this={phaseSectionEl} tabindex="-1">
-			<h1>This session was abandoned</h1>
-			<a class="btn" href={resolve('/')}>Start a new quiz</a>
+			<h1>{m.play_abandoned_heading()}</h1>
+			<a class="btn" href={resolve('/')}>{m.play_start_new()}</a>
 		</section>
 	{/if}
 </main>

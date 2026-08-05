@@ -10,11 +10,12 @@
 import type { PageServerLoad } from './$types';
 import { getDb } from '$lib/server/db/index.js';
 import { getQuizForLobby } from '$lib/server/quizzes/manage.js';
+import { localizedQuizName, localizedQuizDescription } from '$lib/server/quizzes/localize.js';
 import { recordShareEvent } from '$lib/server/metrics.js';
 import { requirePlatform } from '$lib/server/http.js';
 import { parisDay } from '$lib/server/time.js';
 
-export const load: PageServerLoad = async ({ params, platform }) => {
+export const load: PageServerLoad = async ({ params, platform, locals }) => {
 	const env = requirePlatform(platform);
 	const db = getDb(env);
 
@@ -23,8 +24,8 @@ export const load: PageServerLoad = async ({ params, platform }) => {
 
 	return {
 		quizId: quiz.id,
-		quizName: quiz.name,
-		description: quiz.description,
+		quizName: localizedQuizName(quiz, locals.locale),
+		description: localizedQuizDescription(quiz, locals.locale),
 		roundCount
 	};
 };

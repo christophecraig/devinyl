@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { ApiError } from '$lib/client/api.js';
 	import type { PageProps } from './$types';
+	import { m } from '$lib/paraglide/messages.js';
 
 	const { data }: PageProps = $props();
 
@@ -29,39 +30,36 @@
 </script>
 
 <svelte:head>
-	<title>Devinyl — {data.inviter.displayName} invites you</title>
-	<meta name="description" content="{data.inviter.displayName} wants to be friends on Devinyl." />
-	<meta property="og:title" content="{data.inviter.displayName} invites you to Devinyl" />
-	<meta
-		property="og:description"
-		content="Add each other, compare boards, and challenge each other's scores."
-	/>
+	<title>{m.title_invite({ name: data.inviter.displayName })}</title>
+	<meta name="description" content={m.invite_description({ name: data.inviter.displayName })} />
+	<meta property="og:title" content={m.invite_og_title({ name: data.inviter.displayName })} />
+	<meta property="og:description" content={m.invite_og_description()} />
 	<meta property="og:image" content="/og-branded.png" />
 	<meta name="twitter:card" content="summary_large_image" />
 </svelte:head>
 
 <main class="sheet">
-	<p class="eyebrow">Friend invite</p>
-	<h1>{data.inviter.displayName} invites you to Devinyl</h1>
+	<p class="eyebrow">{m.invite_eyebrow()}</p>
+	<h1>{m.invite_heading({ name: data.inviter.displayName })}</h1>
 
 	{#if state === 'sent'}
-		<p class="muted">Friend request sent.</p>
+		<p class="muted">{m.invite_sent()}</p>
 	{:else if state === 'needs_auth'}
-		<p class="muted">Sign in or create an account to add {data.inviter.displayName} as a friend.</p>
+		<p class="muted">{m.invite_needs_auth({ name: data.inviter.displayName })}</p>
 		<div class="actions">
-			<a class="btn" href={resolve('/login')}>Sign in</a>
-			<a class="btn" href={resolve('/signup')}>Sign up</a>
+			<a class="btn" href={resolve('/login')}>{m.invite_sign_in()}</a>
+			<a class="btn" href={resolve('/signup')}>{m.invite_sign_up()}</a>
 		</div>
 	{:else}
 		<button type="button" onclick={addFriend} disabled={state === 'sending'}>
-			{state === 'sending' ? 'Sending…' : 'Add as friend'}
+			{state === 'sending' ? m.invite_button_sending() : m.invite_button_add()}
 		</button>
 		{#if state === 'error'}
-			<p class="error-note">Something went wrong — try again.</p>
+			<p class="error-note">{m.invite_error()}</p>
 		{/if}
 	{/if}
 
-	<a class="btn quiet" href={resolve('/')}>Go to Devinyl</a>
+	<a class="btn quiet" href={resolve('/')}>{m.invite_go_to_devinyl()}</a>
 </main>
 
 <style>

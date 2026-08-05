@@ -45,6 +45,7 @@
 	import type { Game } from '$lib/client/game-state.svelte.js';
 	import type { ChoiceRetryMode, RoundChoices, TargetName } from '$lib/game/types.js';
 	import { seededShuffle } from '$lib/client/shuffle.js';
+	import { m } from '$lib/paraglide/messages.js';
 
 	interface Props {
 		game: Game;
@@ -69,7 +70,10 @@
 		onattempt
 	}: Props = $props();
 
-	const TARGET_LABEL: Record<TargetName, string> = { title: 'Title', artist: 'Artist' };
+	const TARGET_LABEL: Record<TargetName, string> = {
+		title: m.common_label_title(),
+		artist: m.common_label_artist()
+	};
 
 	/** The committed option text per target, once a pick has become final (correct, or wrong under `oneShot`). */
 	let picked = $state<Partial<Record<TargetName, string>>>({});
@@ -222,9 +226,9 @@
 				class:penalized={penalized || (final && pickedCorrect[target] === false)}
 			>
 				{#if final}
-					{pickedCorrect[target] ? 'Locked in' : 'Not that one — locked in'}
+					{pickedCorrect[target] ? m.choice_answer_locked() : m.choice_answer_wrong_locked()}
 				{:else if penalized}
-					Not that one — try again in {penaltySeconds}s
+					{m.choice_answer_penalized({ seconds: penaltySeconds })}
 				{:else}
 					&nbsp;
 				{/if}

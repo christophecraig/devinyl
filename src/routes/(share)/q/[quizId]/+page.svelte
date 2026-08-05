@@ -2,26 +2,27 @@
 	/** Quiz lobby — SHARE-1/2, plan task 3.14. */
 	import PlayQuiz from '$lib/components/PlayQuiz.svelte';
 	import type { PageProps } from './$types';
+	import { m } from '$lib/paraglide/messages.js';
 
 	const { data }: PageProps = $props();
 </script>
 
 <svelte:head>
-	<title>Devinyl — {data.quizName}</title>
-	<meta
-		name="description"
-		content="A {data.roundCount}-round Devinyl quiz. Guess the song, race the clock."
-	/>
+	<title>{m.title_quiz_lobby({ name: data.quizName })}</title>
+	<meta name="description" content={m.quiz_lobby_description({ count: data.roundCount })} />
 	<!-- SHARE-4: branded preview only — never track artwork, titles, or artists. -->
 	<meta property="og:title" content={data.quizName} />
-	<meta property="og:description" content="A {data.roundCount}-round Devinyl quiz." />
+	<meta
+		property="og:description"
+		content={m.quiz_lobby_og_description({ count: data.roundCount })}
+	/>
 	<meta property="og:image" content="/og-branded.png" />
 	<meta name="twitter:card" content="summary_large_image" />
 </svelte:head>
 
 {#snippet lobbyBanner()}
 	<div class="lobby-banner">
-		<p class="eyebrow">Quiz · {data.roundCount} rounds</p>
+		<p class="eyebrow">{m.quiz_lobby_eyebrow({ count: data.roundCount })}</p>
 		<h1>{data.quizName}</h1>
 		{#if data.description}<p class="muted">{data.description}</p>{/if}
 	</div>

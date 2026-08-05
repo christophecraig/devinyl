@@ -6,12 +6,13 @@
 	 */
 	import { page } from '$app/state';
 	import PlayQuiz from '$lib/components/PlayQuiz.svelte';
+	import { m } from '$lib/paraglide/messages.js';
 
 	const quizId = page.params.quizId as string;
 </script>
 
 <svelte:head>
-	<title>Devinyl — Play</title>
+	<title>{m.title_play()}</title>
 </svelte:head>
 
 <PlayQuiz target={{ quizId }} />

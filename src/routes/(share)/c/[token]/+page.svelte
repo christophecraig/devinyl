@@ -5,22 +5,27 @@
 	 */
 	import PlayQuiz from '$lib/components/PlayQuiz.svelte';
 	import type { PageProps } from './$types';
+	import { m } from '$lib/paraglide/messages.js';
+	import { formatNumber } from '$lib/client/intl.js';
 
 	const { data }: PageProps = $props();
 	const lobby = $derived(data.lobby);
 </script>
 
 <svelte:head>
-	<title>Devinyl — {lobby.challengerName} challenges you</title>
+	<title>{m.title_challenge_lobby({ name: lobby.challengerName })}</title>
 	<meta
 		name="description"
-		content="{lobby.challengerName} scored {lobby.scoreToBeat} pts on Devinyl. Beat it?"
+		content={m.challenge_lobby_description({
+			name: lobby.challengerName,
+			score: lobby.scoreToBeat
+		})}
 	/>
 	<!-- SHARE-4: nickname + score to beat only — never track names, artwork, or titles. -->
-	<meta property="og:title" content="{lobby.challengerName} challenges you on Devinyl" />
+	<meta property="og:title" content={m.challenge_lobby_og_title({ name: lobby.challengerName })} />
 	<meta
 		property="og:description"
-		content="Score to beat: {lobby.scoreToBeat} pts — {lobby.rounds} rounds."
+		content={m.challenge_lobby_og_description({ score: lobby.scoreToBeat, rounds: lobby.rounds })}
 	/>
 	<meta property="og:image" content="/og-branded.png" />
 	<meta name="twitter:card" content="summary_large_image" />
@@ -28,10 +33,12 @@
 
 {#snippet lobbyBanner()}
 	<div class="lobby-banner">
-		<p class="eyebrow">Challenge</p>
-		<h1>{lobby.challengerName} challenges you</h1>
+		<p class="eyebrow">{m.challenge_lobby_eyebrow()}</p>
+		<h1>{m.challenge_lobby_heading({ name: lobby.challengerName })}</h1>
 		<p class="muted">
-			Score to beat: <strong>{lobby.scoreToBeat} pts</strong> · {lobby.rounds} rounds
+			{m.challenge_lobby_score_to_beat()}
+			<strong>{m.play_score_pts({ score: formatNumber(lobby.scoreToBeat) })}</strong>
+			· {m.challenge_lobby_rounds({ count: lobby.rounds })}
 		</p>
 	</div>
 {/snippet}

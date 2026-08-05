@@ -15,6 +15,7 @@
 	 */
 	import type { RoundPack, RoundResultPayload, ScoringMode, TargetName } from '$lib/game/types.js';
 	import { getCurve } from '$lib/game/scoring.js';
+	import { m } from '$lib/paraglide/messages.js';
 
 	interface Props {
 		pack: RoundPack;
@@ -27,7 +28,10 @@
 
 	let { pack, result, required, scoringMode, curveVersion, onNext }: Props = $props();
 
-	const TARGET_LABEL: Record<TargetName, string> = { title: 'Title', artist: 'Artist' };
+	const TARGET_LABEL: Record<TargetName, string> = {
+		title: m.common_label_title(),
+		artist: m.common_label_artist()
+	};
 
 	interface TargetOutcome {
 		target: TargetName;
@@ -50,10 +54,10 @@
 </script>
 
 <section class="round-reveal" tabindex="-1">
-	<h2 class="eyebrow-heading">Reveal</h2>
+	<h2 class="eyebrow-heading">{m.reveal_heading()}</h2>
 
 	{#if result.skipped}
-		<p class="skipped-note">This clip couldn't be played — the round was skipped, not scored.</p>
+		<p class="skipped-note">{m.reveal_skipped_note()}</p>
 	{/if}
 
 	<div class="reveal-card">
@@ -67,7 +71,7 @@
 				<img
 					class="cover"
 					src={pack.reveal.coverUrl}
-					alt={`Cover art for ${pack.reveal.title}`}
+					alt={m.reveal_cover_alt({ title: pack.reveal.title })}
 					width="120"
 					height="120"
 				/>
@@ -90,14 +94,14 @@
 			{#each outcomes as outcome (outcome.target)}
 				<li class:correct={outcome.locked} class:missed={!outcome.locked}>
 					{TARGET_LABEL[outcome.target]}: {outcome.locked
-						? `correct, +${outcome.points} pts`
-						: 'not answered'}
+						? m.reveal_outcome_correct({ points: outcome.points })
+						: m.reveal_outcome_missed()}
 				</li>
 			{/each}
 		</ul>
 	{/if}
 
-	<button class="primary next" type="button" onclick={onNext}>Next</button>
+	<button class="primary next" type="button" onclick={onNext}>{m.reveal_next()}</button>
 </section>
 
 <style>

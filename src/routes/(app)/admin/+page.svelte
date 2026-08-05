@@ -10,6 +10,8 @@
 	 * 3.11's metrics aggregation) — this is that screen, for all three.
 	 */
 	import { onMount } from 'svelte';
+	import { m } from '$lib/paraglide/messages.js';
+	import { formatNumber } from '$lib/client/intl.js';
 
 	interface DailyCalendarEntry {
 		day: string;
@@ -90,67 +92,67 @@
 </script>
 
 <svelte:head>
-	<title>Devinyl — Admin</title>
+	<title>{m.title_admin()}</title>
 </svelte:head>
 
 <main class="sheet">
-	<h1>Admin</h1>
+	<h1>{m.admin_heading()}</h1>
 
 	{#if authorized === null}
-		<p class="waiting">Loading…</p>
+		<p class="waiting">{m.common_loading()}</p>
 	{:else if authorized === false}
-		<p class="error-note">Operator access required.</p>
+		<p class="error-note">{m.admin_unauthorized()}</p>
 	{:else}
 		<section>
-			<h2>MET-2 targets</h2>
+			<h2>{m.admin_met2_heading()}</h2>
 			<div class="stat-grid">
 				<div class="stat-tile" class:hit={d7Rate !== null && d7Rate >= 25}>
 					<p class="stat-value">{d7Rate === null ? '—' : `${d7Rate}%`}</p>
-					<p class="stat-label">D7 return (target ≥ 25%)</p>
+					<p class="stat-label">{m.admin_d7_return_label()}</p>
 				</div>
 				<div class="stat-tile">
 					<p class="stat-value">{streakMedian === null ? '—' : streakMedian}</p>
-					<p class="stat-label">Approx. median streak (target ≥ 3)</p>
+					<p class="stat-label">{m.admin_streak_median_label()}</p>
 				</div>
 			</div>
 		</section>
 
 		<section>
-			<h2>Funnel (last 30 days)</h2>
+			<h2>{m.admin_funnel_heading()}</h2>
 			<div class="stat-grid">
 				<div class="stat-tile">
-					<p class="stat-value">{sum('daily_started')}</p>
-					<p class="stat-label">Daily started</p>
+					<p class="stat-value">{formatNumber(sum('daily_started'))}</p>
+					<p class="stat-label">{m.admin_daily_started()}</p>
 				</div>
 				<div class="stat-tile">
-					<p class="stat-value">{sum('daily_completed')}</p>
-					<p class="stat-label">Daily completed</p>
+					<p class="stat-value">{formatNumber(sum('daily_completed'))}</p>
+					<p class="stat-label">{m.admin_daily_completed()}</p>
 				</div>
 				<div class="stat-tile">
-					<p class="stat-value">{sum('daily_shared')}</p>
-					<p class="stat-label">Daily shared</p>
+					<p class="stat-value">{formatNumber(sum('daily_shared'))}</p>
+					<p class="stat-label">{m.admin_daily_shared()}</p>
 				</div>
 				<div class="stat-tile">
-					<p class="stat-value">{sum('challenge_opened')}</p>
-					<p class="stat-label">Challenges opened</p>
+					<p class="stat-value">{formatNumber(sum('challenge_opened'))}</p>
+					<p class="stat-label">{m.admin_challenges_opened()}</p>
 				</div>
 				<div class="stat-tile">
-					<p class="stat-value">{sum('challenge_started')}</p>
-					<p class="stat-label">Challenges played</p>
+					<p class="stat-value">{formatNumber(sum('challenge_started'))}</p>
+					<p class="stat-label">{m.admin_challenges_played()}</p>
 				</div>
 				<div class="stat-tile">
-					<p class="stat-value">{sum('challenge_completed')}</p>
-					<p class="stat-label">Challenges completed</p>
+					<p class="stat-value">{formatNumber(sum('challenge_completed'))}</p>
+					<p class="stat-label">{m.admin_challenges_completed()}</p>
 				</div>
 				<div class="stat-tile">
-					<p class="stat-value">{sum('guest_account_conversion')}</p>
-					<p class="stat-label">Guest → account</p>
+					<p class="stat-value">{formatNumber(sum('guest_account_conversion'))}</p>
+					<p class="stat-label">{m.admin_guest_conversion()}</p>
 				</div>
 			</div>
 		</section>
 
 		<section>
-			<h2>Daily calendar (next 14 days)</h2>
+			<h2>{m.admin_calendar_heading()}</h2>
 			<ul class="rank-list">
 				{#each calendar as entry (entry.day)}
 					<li class:gap={entry.quizId === null}>
@@ -158,7 +160,7 @@
 						{#if entry.quizId}
 							— #{entry.dayNumber} {entry.quizName}
 						{:else}
-							— <strong>gap, no quiz scheduled</strong>
+							— <strong>{m.admin_calendar_gap()}</strong>
 						{/if}
 					</li>
 				{/each}
@@ -166,9 +168,9 @@
 		</section>
 
 		<section>
-			<h2>Flagged sessions</h2>
+			<h2>{m.admin_flagged_heading()}</h2>
 			{#if flagged.length === 0}
-				<p class="muted">Nothing flagged.</p>
+				<p class="muted">{m.admin_flagged_empty()}</p>
 			{:else}
 				<ul class="rank-list">
 					{#each flagged as s (s.id)}

@@ -9,6 +9,9 @@ node_modules
 /build
 /dist
 
+# Paraglide (inlang) — compiled from project.inlang/messages/*.json
+/src/lib/paraglide
+
 # Wrangler / D1 local state, Cloudflare-generated types
 worker-configuration.d.ts
 

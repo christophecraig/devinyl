@@ -5,6 +5,8 @@
 	 */
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
+	import { m } from '$lib/paraglide/messages.js';
+	import { formatNumber } from '$lib/client/intl.js';
 
 	interface PersonalStats {
 		gamesPlayed: number;
@@ -36,59 +38,67 @@
 </script>
 
 <svelte:head>
-	<title>Devinyl — Your stats</title>
+	<title>{m.title_stats()}</title>
 </svelte:head>
 
 <main class="sheet">
-	<h1>Your stats</h1>
+	<h1>{m.stats_heading()}</h1>
 
 	{#if unauthorized}
 		<p class="error-note">
-			<a href={resolve('/(app)/login')}>Sign in</a> to see your stats.
+			<a href={resolve('/(app)/login')}>{m.stats_signin_prompt()}</a>
+			{m.stats_signin_suffix()}
 		</p>
 	{:else if !stats}
-		<p class="waiting">Loading…</p>
+		<p class="waiting">{m.common_loading()}</p>
 	{:else}
 		<div class="stat-grid">
 			<div class="stat-tile">
-				<p class="stat-value">{stats.gamesPlayed}</p>
-				<p class="stat-label">Games played</p>
+				<p class="stat-value">{formatNumber(stats.gamesPlayed)}</p>
+				<p class="stat-label">{m.stats_games_played()}</p>
 			</div>
 			<div class="stat-tile">
-				<p class="stat-value">{stats.averageScore}</p>
-				<p class="stat-label">Average score</p>
+				<p class="stat-value">{formatNumber(stats.averageScore)}</p>
+				<p class="stat-label">{m.stats_average_score()}</p>
 			</div>
 			<div class="stat-tile">
-				<p class="stat-value">{stats.bestScore}</p>
-				<p class="stat-label">Best score</p>
+				<p class="stat-value">{formatNumber(stats.bestScore)}</p>
+				<p class="stat-label">{m.stats_best_score()}</p>
 			</div>
 			<div class="stat-tile">
-				<p class="stat-value">{stats.streaks.current}</p>
-				<p class="stat-label">Current streak</p>
+				<p class="stat-value">{formatNumber(stats.streaks.current)}</p>
+				<p class="stat-label">{m.stats_current_streak()}</p>
 			</div>
 			<div class="stat-tile">
-				<p class="stat-value">{stats.streaks.best}</p>
-				<p class="stat-label">Best streak</p>
+				<p class="stat-value">{formatNumber(stats.streaks.best)}</p>
+				<p class="stat-label">{m.stats_best_streak()}</p>
 			</div>
 			{#if stats.bestWeeklyRank}
 				<div class="stat-tile">
 					<p class="stat-value">#{stats.bestWeeklyRank.rank}</p>
-					<p class="stat-label">Best weekly rank ({stats.bestWeeklyRank.week})</p>
+					<p class="stat-label">
+						{m.stats_best_weekly_rank({ week: stats.bestWeeklyRank.week })}
+					</p>
 				</div>
 			{/if}
 		</div>
 
 		<section>
-			<h2>Mode breakdown</h2>
-			<p class="muted">Speed: {stats.modeBreakdown.speed} · Untimed: {stats.modeBreakdown.fixed}</p>
+			<h2>{m.stats_mode_breakdown_heading()}</h2>
+			<p class="muted">
+				{m.stats_mode_breakdown({
+					speed: formatNumber(stats.modeBreakdown.speed),
+					fixed: formatNumber(stats.modeBreakdown.fixed)
+				})}
+			</p>
 		</section>
 
 		{#if stats.topGenres.length > 0}
 			<section>
-				<h2>Top genres</h2>
+				<h2>{m.stats_top_genres_heading()}</h2>
 				<ul class="rank-list">
 					{#each stats.topGenres as g (g.genre)}
-						<li>{g.genre} <span class="muted">({g.count})</span></li>
+						<li>{g.genre} <span class="muted">({formatNumber(g.count)})</span></li>
 					{/each}
 				</ul>
 			</section>
@@ -96,10 +106,10 @@
 
 		{#if stats.topDecades.length > 0}
 			<section>
-				<h2>Top decades</h2>
+				<h2>{m.stats_top_decades_heading()}</h2>
 				<ul class="rank-list">
 					{#each stats.topDecades as d (d.decade)}
-						<li>{d.decade}s <span class="muted">({d.count})</span></li>
+						<li>{d.decade}s <span class="muted">({formatNumber(d.count)})</span></li>
 					{/each}
 				</ul>
 			</section>

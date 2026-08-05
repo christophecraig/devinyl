@@ -21,6 +21,7 @@
 	 */
 	import type { Game } from '$lib/client/game-state.svelte.js';
 	import type { TargetName } from '$lib/game/types.js';
+	import { m } from '$lib/paraglide/messages.js';
 
 	interface Props {
 		game: Game;
@@ -31,7 +32,10 @@
 
 	let { game, required, onattempt }: Props = $props();
 
-	const LABEL: Record<TargetName, string> = { title: 'Title', artist: 'Artist' };
+	const LABEL: Record<TargetName, string> = {
+		title: m.common_label_title(),
+		artist: m.common_label_artist()
+	};
 
 	/** Local per-target draft text; not derived from `game` so a locked target's last value stays visible. */
 	let drafts = $state<Partial<Record<TargetName, string>>>({});
@@ -102,9 +106,9 @@
 			/>
 			<p id={statusId} class="status" class:rejected={isRejected} class:locked>
 				{#if locked}
-					Locked in
+					{m.text_answer_locked()}
 				{:else if isRejected}
-					Not that one
+					{m.text_answer_rejected()}
 				{:else}
 					&nbsp;
 				{/if}
@@ -116,7 +120,7 @@
 	     people who can't see the inputs. Dropped once nothing is left to lock
 	     so it never contradicts the screen. -->
 	{#if required.some((target) => !isLocked(target))}
-		<p class="hint">Press Enter to lock in</p>
+		<p class="hint">{m.text_answer_hint()}</p>
 	{/if}
 </div>
 

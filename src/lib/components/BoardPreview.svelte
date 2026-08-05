@@ -9,6 +9,8 @@
 	 */
 	import { getBoard, ApiError, type BoardScopePath } from '$lib/client/api.js';
 	import type { ScoringMode } from '$lib/game/types.js';
+	import { m } from '$lib/paraglide/messages.js';
+	import { formatNumber } from '$lib/client/intl.js';
 
 	interface Props {
 		scope: BoardScopePath;
@@ -43,22 +45,25 @@
 </script>
 
 {#if loading}
-	<p class="muted board-note">Loading the board…</p>
+	<p class="muted board-note">{m.board_loading()}</p>
 {:else if !error && entries.length > 0}
 	<div class="board-preview">
-		<h2 class="board-heading">Board</h2>
+		<h2 class="board-heading">{m.board_heading()}</h2>
 		<ol class="board-list">
 			{#each entries as entry (entry.rank)}
 				<li class:self={entry.isSelf}>
 					<span class="board-rank">{entry.rank}</span>
 					<span class="board-name">{entry.name}</span>
-					<span class="board-score">{entry.totalScore}</span>
+					<span class="board-score">{formatNumber(entry.totalScore)}</span>
 				</li>
 			{/each}
 		</ol>
 		{#if selfOutsideTop}
 			<p class="board-self-row">
-				You: #{selfOutsideTop.rank} · {selfOutsideTop.totalScore} pts
+				{m.board_self_row({
+					rank: selfOutsideTop.rank,
+					score: formatNumber(selfOutsideTop.totalScore)
+				})}
 			</p>
 		{/if}
 	</div>

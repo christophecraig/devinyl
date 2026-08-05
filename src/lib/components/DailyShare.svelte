@@ -7,6 +7,7 @@
 	import { buildDailyShareText } from '$lib/game/share.js';
 	import { recordMetricEvent } from '$lib/client/api.js';
 	import type { FinalizedRound } from '$lib/game/types.js';
+	import { m } from '$lib/paraglide/messages.js';
 
 	interface Props {
 		dayNumber: number;
@@ -35,4 +36,6 @@
 	}
 </script>
 
-<button type="button" onclick={share}>{copied ? 'Copied!' : 'Share result'}</button>
+<button type="button" onclick={share}
+	>{copied ? m.daily_share_copied() : m.daily_share_button()}</button
+>

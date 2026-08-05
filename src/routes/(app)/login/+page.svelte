@@ -5,6 +5,8 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { signIn, ApiError } from '$lib/client/api.js';
+	import { m } from '$lib/paraglide/messages.js';
+	import { localizeApiErrorCode } from '$lib/client/errors.js';
 
 	let email = $state('');
 	let password = $state('');
@@ -21,7 +23,7 @@
 			await signIn({ email, password });
 			await goto(resolve('/(app)'));
 		} catch (err) {
-			error = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.';
+			error = err instanceof ApiError ? localizeApiErrorCode(err.code) : m.api_error_internal();
 		} finally {
 			submitting = false;
 		}
@@ -29,20 +31,20 @@
 </script>
 
 <svelte:head>
-	<title>Sign in — Devinyl</title>
+	<title>{m.title_login()}</title>
 </svelte:head>
 
 <main>
 	<section class="panel">
-		<h1>Sign in</h1>
+		<h1>{m.login_heading()}</h1>
 		<form onsubmit={handleSubmit} novalidate>
 			<div class="field">
-				<label for="login-email">Email</label>
+				<label for="login-email">{m.login_label_email()}</label>
 				<input id="login-email" type="email" autocomplete="email" required bind:value={email} />
 			</div>
 
 			<div class="field">
-				<label for="login-password">Password</label>
+				<label for="login-password">{m.login_label_password()}</label>
 				<input
 					id="login-password"
 					type="password"
@@ -55,11 +57,11 @@
 			<p class="error" role="alert">{error ?? ''}</p>
 
 			<button class="primary start" type="submit" disabled={submitting}>
-				{submitting ? 'Signing in…' : 'Sign in'}
+				{submitting ? m.login_button_submitting() : m.login_button_submit()}
 			</button>
 		</form>
 		<p class="switch">
-			No account yet? <a href={resolve('/(app)/signup')}>Create one</a>
+			{m.login_switch_prompt()} <a href={resolve('/(app)/signup')}>{m.login_switch_link()}</a>
 		</p>
 	</section>
 </main>

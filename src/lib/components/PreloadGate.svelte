@@ -23,6 +23,7 @@
 	 * first statement inside that handler (iOS Safari autoplay policy).
 	 */
 	import type { PreloadEstimate, PreloadProgress } from '$lib/client/preloader.js';
+	import { m } from '$lib/paraglide/messages.js';
 
 	interface Props {
 		phase: 'start' | 'confirm' | 'loading';
@@ -53,8 +54,8 @@
      inside it is focusable yet (A11Y-3), e.g. the bare loading state. -->
 <section class="preload-gate" tabindex="-1">
 	{#if phase === 'loading'}
-		<p class="eyebrow">Cueing up</p>
-		<h1>Loading your quiz…</h1>
+		<p class="eyebrow">{m.preload_eyebrow_loading()}</p>
+		<h1>{m.preload_heading_loading()}</h1>
 		<div
 			class="progress-track"
 			role="progressbar"
@@ -67,38 +68,46 @@
 		<!-- polite status readout — not part of the gameplay Announcer, this is
 		     a one-off loading screen, not a round-flow announcement. -->
 		<p class="status" role="status" aria-live="polite">
-			Loaded {progress?.settled ?? 0} of {progress?.total ?? roundCount} clips
+			{m.preload_status_loaded({
+				settled: progress?.settled ?? 0,
+				total: progress?.total ?? roundCount
+			})}
 			{#if skippedCount > 0}
-				&mdash; {skippedCount} unavailable and will be skipped
+				{m.preload_status_skipped({ count: skippedCount })}
 			{/if}
 		</p>
 	{:else}
-		<p class="eyebrow">{roundCount} rounds</p>
-		<h1>Ready to play?</h1>
+		<p class="eyebrow">{m.preload_eyebrow_rounds({ count: roundCount })}</p>
+		<h1>{m.preload_heading_ready()}</h1>
 
 		<!-- The house rules, as a list rather than a sentence: it is the last
 		     thing a player reads before the clock starts, and MUS-7's "clips
 		     play once" is the expectation most worth landing. -->
 		<ul class="rules">
-			<li>Each clip plays <strong>once</strong> — no pausing, no replays.</li>
-			<li>Answer faster, score higher.</li>
-			<li>Wrong guesses cost you nothing but time.</li>
+			<li>
+				{m.preload_rule_once_pre()} <strong>{m.preload_rule_once_strong()}</strong>
+				{m.preload_rule_once_post()}
+			</li>
+			<li>{m.preload_rule_speed()}</li>
+			<li>{m.preload_rule_wrong()}</li>
 		</ul>
 
 		{#if untimedBoard}
 			<p class="notice">
-				You're playing on the <strong>untimed board</strong> — speed doesn't affect your score, only getting
-				the answer right.
+				{m.preload_untimed_pre()} <strong>{m.preload_untimed_strong()}</strong>
+				{m.preload_untimed_post()}
 			</p>
 		{/if}
 		{#if phase === 'confirm'}
 			<p class="notice">
-				This quiz is large or your connection looks slow: about {formatMb(estimate.bytes)} MB, roughly
-				{formatSeconds(estimate.seconds)} s to download.
+				{m.preload_confirm_notice({
+					mb: formatMb(estimate.bytes),
+					seconds: formatSeconds(estimate.seconds)
+				})}
 			</p>
 		{/if}
 		<button class="primary start" type="button" onclick={onStart}>
-			{phase === 'confirm' ? 'Download and start' : 'Start quiz'}
+			{phase === 'confirm' ? m.preload_button_download() : m.preload_button_start()}
 		</button>
 	{/if}
 </section>

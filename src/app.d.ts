@@ -32,6 +32,8 @@ declare global {
 			guestId: string | null;
 			/** Set in Phase 2 by Better Auth; every Phase 1 caller treats it as null. */
 			userId: string | null;
+			/** Resolved by paraglideMiddleware (LOC-1) — cookie, then Accept-Language, then 'en'. */
+			locale: import('$lib/paraglide/runtime.js').Locale;
 		}
 
 		// interface PageData {}
