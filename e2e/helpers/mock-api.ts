@@ -30,11 +30,13 @@ import type { Page } from '@playwright/test';
 import { getCurve } from '../../src/lib/game/scoring.js';
 import type { FinalizeSessionBody } from '../../src/lib/game/schemas.js';
 import type {
+	Board,
 	FinalizedRound,
 	FinalizeResult,
 	RoundResultPayload,
 	SessionManifest
 } from '../../src/lib/game/types.js';
+import type { DailyInfo } from '../../src/lib/client/api.js';
 import { CLIP_ROUTE_PREFIX } from './manifest.js';
 
 const FIXTURES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
@@ -151,6 +153,66 @@ export async function mockSessionApi(
 	});
 
 	return recorded;
+}
+
+/** Answers `GET /api/daily` (task 3.1) with a canned `DailyInfo` — the daily route's own client fetch, unlike the challenge lobby's SSR load (see `daily.e2e.ts`'s module doc). */
+export async function mockDailyApi(page: Page, opts: { daily: DailyInfo }): Promise<void> {
+	await page.route('**/api/daily', async (route) => {
+		if (route.request().method() !== 'GET') return route.fallback();
+		await route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({ daily: opts.daily })
+		});
+	});
+}
+
+/** Records `POST /api/challenges` (task 3.5) and answers with a canned token. */
+export function mockCreateChallenge(page: Page, opts: { token: string }): { sessionIds: string[] } {
+	const recorded = { sessionIds: [] as string[] };
+	void page.route('**/api/challenges', async (route) => {
+		if (route.request().method() !== 'POST') return route.fallback();
+		const body = route.request().postDataJSON() as { sessionId: string };
+		recorded.sessionIds.push(body.sessionId);
+		await route.fulfill({
+			status: 201,
+			contentType: 'application/json',
+			body: JSON.stringify({ token: opts.token })
+		});
+	});
+	return recorded;
+}
+
+/**
+ * Answers any `GET .../board` request (quiz/challenge/daily, task 3.6) with an
+ * empty board — `BoardPreview.svelte` renders nothing when `entries` is empty,
+ * so this just keeps the summary screen from making a real, unmocked network
+ * call rather than asserting anything about board content.
+ */
+export async function mockEmptyBoards(page: Page): Promise<void> {
+	const emptyBoard: Board = {
+		entries: [],
+		selfEntry: null,
+		mode: 'speed',
+		hasUntimedEntries: false,
+		nextCursor: null
+	};
+	await page.route('**/api/*/board*', async (route) => {
+		if (route.request().method() !== 'GET') return route.fallback();
+		await route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({ board: emptyBoard })
+		});
+	});
+	await page.route('**/api/*/*/board*', async (route) => {
+		if (route.request().method() !== 'GET') return route.fallback();
+		await route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({ board: emptyBoard })
+		});
+	});
 }
 
 /** Serves the committed tone WAVs (task 1.29) for every `/e2e-clip/...` URL a manifest points at. */
