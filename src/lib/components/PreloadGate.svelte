@@ -87,8 +87,8 @@
 
 		{#if untimedBoard}
 			<p class="notice">
-				You're playing on the <strong>untimed board</strong> — speed doesn't affect your score, only
-				getting the answer right.
+				You're playing on the <strong>untimed board</strong> — speed doesn't affect your score, only getting
+				the answer right.
 			</p>
 		{/if}
 		{#if phase === 'confirm'}

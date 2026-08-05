@@ -58,8 +58,16 @@
 		onattempt?: (target: TargetName, accepted: boolean) => void;
 	}
 
-	let { game, required, choices, sessionId, position, retryMode, penaltySeconds, onattempt }: Props =
-		$props();
+	let {
+		game,
+		required,
+		choices,
+		sessionId,
+		position,
+		retryMode,
+		penaltySeconds,
+		onattempt
+	}: Props = $props();
 
 	const TARGET_LABEL: Record<TargetName, string> = { title: 'Title', artist: 'Artist' };
 

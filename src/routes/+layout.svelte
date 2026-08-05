@@ -29,6 +29,10 @@
 			<span class="disc" aria-hidden="true"></span>
 			<span class="name">Devinyl</span>
 		</a>
+		<nav class="menu" aria-label="Primary">
+			<a href={resolve('/(app)/daily')}>Daily</a>
+			<a href={resolve('/(app)/stats')}>Stats</a>
+		</nav>
 	</header>
 
 	<div class="body">
@@ -57,11 +61,27 @@
 		z-index: 10;
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		padding: var(--space-3) var(--space-4);
 		border-bottom: 1px solid var(--rule);
 		/* Tinted rather than transparent: content scrolls underneath it. */
 		background: color-mix(in srgb, var(--surface) 88%, transparent);
 		backdrop-filter: blur(8px);
+	}
+
+	.menu {
+		display: flex;
+		gap: var(--space-4);
+		font-size: var(--text-small);
+	}
+
+	.menu a {
+		color: var(--ink-muted);
+		text-decoration: none;
+	}
+
+	.menu a:hover {
+		color: var(--accent-ink);
 	}
 
 	.wordmark {

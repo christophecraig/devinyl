@@ -7,9 +7,9 @@
  * different rows depending on who acted first.
  *
  * The invite link (FRIEND-1) needs no new table: the link *is* the inviting
- * user's own id (`/i/:userId`, task 3.14's `(share)/i/[token]` route) —
- * ids are already exposed on every board and quiz-lobby response, so this
- * adds no new information, just a shortcut to "friend request this person".
+ * user's own id (task 3.14's `(share)/i/[userId]` route) — ids are already
+ * exposed on every board and quiz-lobby response, so this adds no new
+ * information, just a shortcut to "friend request this person".
  */
 
 import { and, eq, like, ne, or } from 'drizzle-orm';
@@ -117,6 +117,17 @@ export async function listFriends(db: Db, userId: string): Promise<FriendSummary
 		.from(user)
 		.where(or(...otherIds.map((id) => eq(user.id, id))));
 	return others.map((o) => ({ userId: o.id, displayName: o.displayName }));
+}
+
+/** FRIEND-1 invite link (`(share)/i/[userId]`, task 3.14): the inviter's public-facing name. */
+export async function getInviter(db: Db, userId: string): Promise<FriendSummary> {
+	const [row] = await db
+		.select({ id: user.id, displayName: user.displayName })
+		.from(user)
+		.where(eq(user.id, userId))
+		.limit(1);
+	if (!row) apiError('not_found', 'That invite link is no longer valid.');
+	return { userId: row.id, displayName: row.displayName };
 }
 
 export interface PendingRequests {
