@@ -11,7 +11,13 @@
  */
 
 import { z } from 'zod';
-import { DAILY_ROUNDS, MAX_ROUNDS, MIN_ROUNDS } from './types.js';
+import {
+	DAILY_ROUNDS,
+	MAX_ROUNDS,
+	MIN_ROUNDS,
+	MIN_CHOICE_RETRY_PENALTY_SECONDS,
+	MAX_CHOICE_RETRY_PENALTY_SECONDS
+} from './types.js';
 
 // ---------------------------------------------------------------------------
 // Primitives
@@ -57,11 +63,20 @@ const elapsedMsSchema = z.number().int().min(0).max(600_000);
 export const guessTargetSchema = z.enum(['both', 'title', 'artist']);
 export const answerModeSchema = z.enum(['text', 'choice']);
 export const scoringModeSchema = z.enum(['speed', 'fixed']);
+export const choiceRetryModeSchema = z.enum(['oneShot', 'penalty']);
+/** QUIZ-7/ANS-8: 0-10s, meaningful only when `choiceRetryMode === 'penalty'`. */
+export const choiceRetryPenaltySecondsSchema = z
+	.number()
+	.int()
+	.min(MIN_CHOICE_RETRY_PENALTY_SECONDS)
+	.max(MAX_CHOICE_RETRY_PENALTY_SECONDS);
 
 export const quizSettingsSchema = z.object({
 	guessTarget: guessTargetSchema,
 	answerMode: answerModeSchema,
-	scoringMode: scoringModeSchema
+	scoringMode: scoringModeSchema,
+	choiceRetryMode: choiceRetryModeSchema,
+	choiceRetryPenaltySeconds: choiceRetryPenaltySecondsSchema
 });
 
 export const roundCountSchema = z.number().int().min(MIN_ROUNDS).max(MAX_ROUNDS);

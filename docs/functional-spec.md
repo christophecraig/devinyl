@@ -88,6 +88,7 @@ A quiz is created once and playable many times (solo, as a challenge, or later i
   - _Multiple choice:_ players pick from 4 options per guess target; generated per §8.
 - **QUIZ-5 [V1]** — **Scoring mode**, configurable per quiz: _speed-based_ (default) or _fixed_ (see §9).
 - **QUIZ-6 [V1]** — Round order is fixed at creation. Every player of a given quiz/challenge gets the same tracks in the same order (required for fair leaderboards).
+- **QUIZ-7 [V1]** — **Multiple-choice retry policy**, configurable per quiz, only meaningful when answer mode (QUIZ-4) is _multiple choice_: _one-shot_ (default, see ANS-7) or _penalty retry_ (see ANS-8), with a **penalty duration** of 0–10 seconds (default 3s), used only in penalty-retry mode. Set alongside the other settings before the game starts; frozen with the rest of the quiz's content once played (CREATE-3).
 
 ---
 
@@ -119,7 +120,8 @@ The round flow is identical across all game modes.
 ### Multiple choice
 
 - **ANS-6 [V1]** — Each guess target shows **4 options**: the correct answer and 3 plausible distractors drawn from similar tracks (same genre and/or era). Distractors never duplicate one another or the correct answer.
-- **ANS-7 [V1]** — One pick per guess target, final once selected. Selecting locks that target immediately (relevant for speed scoring).
+- **ANS-7 [V1]** — **One-shot** retry policy (default, QUIZ-7): one pick per guess target is final — selecting locks that target immediately, right or wrong. Scoring is unaffected either way (§9); this mode exists so a wrong pick doesn't leave the player stuck rereading a locked screen until the clip ends — it ends that target's involvement immediately and lets the round move on (ROUND-3: the round is ready to reveal as soon as every required target is answered, right or wrong).
+- **ANS-8 [V1]** — **Penalty retry** policy (QUIZ-7): a correct pick is still immediately final. A wrong pick disables the whole guess target for the quiz's configured **penalty duration** (0–10 s) — no further pick is accepted during that window — after which it reopens for another attempt, for as long as the clip plays. This rewards a confident first try without punishing a miss beyond the wait: retries stay time-based under speed scoring (a delayed correct answer scores lower, same curve as usual, §9) rather than costing points directly, and the delay stops a player from machine-gunning all 4 options.
 
 ---
 

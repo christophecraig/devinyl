@@ -204,6 +204,8 @@ export async function generateQuiz(
 		guessTarget: settings.guessTarget,
 		answerMode: settings.answerMode,
 		scoringMode: settings.scoringMode,
+		choiceRetryMode: settings.choiceRetryMode,
+		choiceRetryPenaltySeconds: settings.choiceRetryPenaltySeconds,
 		curveVersion: CURRENT_CURVE_VERSION,
 		ephemeralUntil: now + EPHEMERAL_TTL_MS,
 		createdAt: now,

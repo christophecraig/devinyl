@@ -503,6 +503,8 @@
 					choices={game.round?.choices ?? {}}
 					sessionId={manifest.sessionId}
 					position={game.round?.position ?? 0}
+					retryMode={manifest.settings.choiceRetryMode}
+					penaltySeconds={manifest.settings.choiceRetryPenaltySeconds}
 					onattempt={handleAttempt}
 				/>
 			{:else}

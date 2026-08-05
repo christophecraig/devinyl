@@ -11,7 +11,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createGame, type Game, type GamePhase, type GamePorts } from './game-state.svelte.js';
 import { sealRoundPack, generateSessionSeed } from '../answerpack.js';
-import type { ManifestRound, RoundPack, SessionManifest, QuizSettings } from '../game/types.js';
+import {
+	DEFAULT_QUIZ_SETTINGS,
+	type ManifestRound,
+	type RoundPack,
+	type SessionManifest,
+	type QuizSettings
+} from '../game/types.js';
 
 async function buildRound(
 	sessionSeed: string,
@@ -54,7 +60,7 @@ async function buildManifest(
 		quizId: 'quiz-1',
 		rounds,
 		sessionSeed,
-		settings: { guessTarget: 'both', answerMode: 'text', scoringMode: 'speed', ...settings },
+		settings: { ...DEFAULT_QUIZ_SETTINGS, ...settings },
 		effectiveScoringMode: 'speed',
 		curveVersion: 1
 	};
@@ -231,7 +237,7 @@ describe('createGame — skipped rounds', () => {
 			quizId: 'q',
 			rounds: [skippedRound, normal],
 			sessionSeed,
-			settings: { guessTarget: 'both', answerMode: 'text', scoringMode: 'speed' },
+			settings: { ...DEFAULT_QUIZ_SETTINGS },
 			effectiveScoringMode: 'speed',
 			curveVersion: 1
 		};

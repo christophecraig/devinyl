@@ -50,6 +50,8 @@ export function decadeOf(releaseYear: number | null): number | null {
 export type QuizKind = 'manual' | 'generated' | 'official' | 'daily';
 export type GuessTarget = 'both' | 'title' | 'artist';
 export type AnswerMode = 'text' | 'choice';
+/** QUIZ-7: only meaningful when `answerMode === 'choice'` (ANS-7/8). */
+export type ChoiceRetryMode = 'oneShot' | 'penalty';
 
 export const MIN_ROUNDS = 5;
 export const MAX_ROUNDS = 50;
@@ -59,16 +61,26 @@ export const PRELOAD_CONFIRM_THRESHOLD = 20;
 /** DAILY-1: the daily is deliberately shorter — ~3 minutes a day. */
 export const DAILY_ROUNDS = 5;
 
+/** QUIZ-7/ANS-8 penalty-duration bounds. */
+export const MIN_CHOICE_RETRY_PENALTY_SECONDS = 0;
+export const MAX_CHOICE_RETRY_PENALTY_SECONDS = 10;
+export const DEFAULT_CHOICE_RETRY_PENALTY_SECONDS = 3;
+
 export interface QuizSettings {
 	guessTarget: GuessTarget;
 	answerMode: AnswerMode;
 	scoringMode: ScoringMode;
+	choiceRetryMode: ChoiceRetryMode;
+	/** Seconds a wrong pick locks the target before a retry (ANS-8). Only used when `choiceRetryMode === 'penalty'`. */
+	choiceRetryPenaltySeconds: number;
 }
 
 export const DEFAULT_QUIZ_SETTINGS: QuizSettings = {
 	guessTarget: 'both',
 	answerMode: 'text',
-	scoringMode: 'speed'
+	scoringMode: 'speed',
+	choiceRetryMode: 'oneShot',
+	choiceRetryPenaltySeconds: DEFAULT_CHOICE_RETRY_PENALTY_SECONDS
 };
 
 export interface Quiz extends QuizSettings {

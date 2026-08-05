@@ -203,7 +203,9 @@ export async function createSession(
 	const settings: QuizSettings = {
 		guessTarget: quizRow.guessTarget,
 		answerMode: quizRow.answerMode,
-		scoringMode: quizRow.scoringMode
+		scoringMode: quizRow.scoringMode,
+		choiceRetryMode: quizRow.choiceRetryMode,
+		choiceRetryPenaltySeconds: quizRow.choiceRetryPenaltySeconds
 	};
 	const effectiveScoringMode = await resolveScoringMode(db, quizRow, input.player);
 

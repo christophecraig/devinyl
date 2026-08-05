@@ -19,6 +19,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import {
 	decadeOf,
 	type CatalogTrack,
+	type ChoiceRetryMode,
 	type GenerationFilters,
 	type RoundChoices
 } from '$lib/game/types.js';
@@ -245,6 +246,8 @@ export interface CreateQuizOptions {
 	answerMode?: 'text' | 'choice';
 	guessTarget?: 'both' | 'title' | 'artist';
 	scoringMode?: ScoringMode;
+	choiceRetryMode?: ChoiceRetryMode;
+	choiceRetryPenaltySeconds?: number;
 	ownerId?: string | null;
 	kind?: 'manual' | 'generated' | 'official' | 'daily';
 	name?: string;
@@ -288,6 +291,8 @@ export async function createQuiz(db: Db, options: CreateQuizOptions = {}): Promi
 			guessTarget,
 			answerMode,
 			scoringMode: options.scoringMode ?? 'speed',
+			choiceRetryMode: options.choiceRetryMode ?? 'oneShot',
+			choiceRetryPenaltySeconds: options.choiceRetryPenaltySeconds ?? 3,
 			curveVersion: 1
 		})
 		.returning();

@@ -199,6 +199,8 @@ quiz             id PK · owner_id FK user NULL · kind ('manual'|'generated'|'o
                  · guess_target ('both'|'title'|'artist')   (QUIZ-3)
                  · answer_mode ('text'|'choice')            (QUIZ-4)
                  · scoring_mode ('speed'|'fixed')           (QUIZ-5)
+                 · choice_retry_mode ('oneShot'|'penalty')   (QUIZ-7, ANS-7/8; meaningful only when answer_mode='choice')
+                 · choice_retry_penalty_seconds INT 0-10     (QUIZ-7, ANS-8; used only when choice_retry_mode='penalty')
                  · curve_version INT                        (SCORE-6)
                  · ephemeral_until INT NULL                 -- generated-but-unsaved TTL (CREATE-5/6)
                  · created_at · updated_at · deleted_at NULL (CREATE-4: soft delete)
@@ -300,7 +302,7 @@ Per the hybrid decision: the client validates locally for zero-latency feedback 
   - This is obfuscation, not security: anyone can derive all the keys up front. That is fine and always was — §7.2's earlier per-round-key delivery was equally derivable in its offline fallback. FAIR-4 concedes determined cheaters exist; the _authoritative_ defense is server re-validation (§7.3), and coupling key delivery to the beacon bought nothing while making the beacon load-bearing for gameplay.
 - On each keystroke-submit, the client runs the **shared** `normalize()` + `match()` (§8) against the decrypted round answers → immediate accept/reject UI, no network round-trip, no "close!" leakage (ANS-5 — the UI only ever shows accept or reject).
 - Every attempt (raw string, elapsed clip ms from the audio clock) is appended to `guessLog`. Correct submissions lock their target (ANS-1) and record `lockTimes`.
-- Multiple choice (ANS-6/7): the 4 options come plaintext in the manifest (they don't leak the answer); the pick and its timestamp go in `guessLog`; correctness is still only confirmed via the round pack / server.
+- Multiple choice (ANS-6/7/8): the 4 options come plaintext in the manifest (they don't leak the answer); every pick and its timestamp go in `guessLog`; correctness is still only confirmed via the round pack / server. Whether a wrong pick ends the target (one-shot) or reopens it after `choice_retry_penalty_seconds` (penalty retry) is purely a client input-gating rule (§7.4) — it changes nothing about what gets scored, since scoring only ever reads `lockTimes` for the eventual correct pick (§9).
 
 ### 7.3 Hybrid validation — server side (authority)
 
@@ -323,7 +325,7 @@ This keeps casual forgery off the boards while paying **zero latency** during pl
 
 - Pre-round 3-2-1 (ROUND-1) is client-local.
 - Clip plays once, no pause/replay/scrub (ROUND-2) — the audio engine exposes no such controls.
-- Early round end when all targets locked (ROUND-3); otherwise ends at buffer end.
+- Early round end when every required target is **settled** (ROUND-3) — correctly answered, or (choice mode, one-shot retry policy, ANS-7) answered wrong and thereby exhausted; otherwise ends at buffer end. Choice mode's penalty-retry policy (ANS-8) never settles a target on a wrong pick, so it always falls through to buffer end unless answered correctly first.
 - Reveal (ROUND-4) opens the round pack; scoreboard (ROUND-5) is local running state; advance is manual (ROUND-6).
 
 ---

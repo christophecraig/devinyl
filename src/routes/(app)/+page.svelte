@@ -17,8 +17,15 @@
 	import NicknamePrompt from '$lib/components/NicknamePrompt.svelte';
 	import { loadGuest, setNickname } from '$lib/client/guest.js';
 	import { generateQuiz, ApiError } from '$lib/client/api.js';
-	import { MIN_ROUNDS, MAX_ROUNDS, DEFAULT_ROUNDS } from '$lib/game/types.js';
-	import type { AnswerMode, GuessTarget } from '$lib/game/types.js';
+	import {
+		MIN_ROUNDS,
+		MAX_ROUNDS,
+		DEFAULT_ROUNDS,
+		MIN_CHOICE_RETRY_PENALTY_SECONDS,
+		MAX_CHOICE_RETRY_PENALTY_SECONDS,
+		DEFAULT_CHOICE_RETRY_PENALTY_SECONDS
+	} from '$lib/game/types.js';
+	import type { AnswerMode, ChoiceRetryMode, GuessTarget } from '$lib/game/types.js';
 
 	let mounted = $state(false);
 	let nickname = $state<string | null>(null);
@@ -41,6 +48,9 @@
 	let rounds = $state(DEFAULT_ROUNDS);
 	let guessTarget = $state<GuessTarget>('both');
 	let answerMode = $state<AnswerMode>('text');
+	/** QUIZ-7 — only sent/relevant when `answerMode === 'choice'`. */
+	let choiceRetryMode = $state<ChoiceRetryMode>('oneShot');
+	let choiceRetryPenaltySeconds = $state(DEFAULT_CHOICE_RETRY_PENALTY_SECONDS);
 
 	let formError = $state<string | null>(null);
 	let submitting = $state(false);
@@ -65,7 +75,11 @@
 				genre: genre.trim() || undefined,
 				artist: artist.trim() || undefined,
 				rounds,
-				settings: { guessTarget, answerMode }
+				settings: {
+					guessTarget,
+					answerMode,
+					...(answerMode === 'choice' ? { choiceRetryMode, choiceRetryPenaltySeconds } : {})
+				}
 			});
 			await goto(resolve('/(app)/play/[quizId]', { quizId }));
 		} catch (err) {
@@ -151,6 +165,35 @@
 							<option value="choice">Multiple choice</option>
 						</select>
 					</div>
+
+					{#if answerMode === 'choice'}
+						<div class="field">
+							<label for="choiceRetryMode">If you pick wrong</label>
+							<select id="choiceRetryMode" bind:value={choiceRetryMode}>
+								<option value="oneShot">Lock in immediately — one shot</option>
+								<option value="penalty">Wait, then try again</option>
+							</select>
+						</div>
+
+						{#if choiceRetryMode === 'penalty'}
+							<div class="field">
+								<label for="choiceRetryPenaltySeconds">
+									Retry wait ({choiceRetryPenaltySeconds}s)
+								</label>
+								<input
+									id="choiceRetryPenaltySeconds"
+									type="range"
+									min={MIN_CHOICE_RETRY_PENALTY_SECONDS}
+									max={MAX_CHOICE_RETRY_PENALTY_SECONDS}
+									bind:value={choiceRetryPenaltySeconds}
+								/>
+								<div class="range-scale" aria-hidden="true">
+									<span>{MIN_CHOICE_RETRY_PENALTY_SECONDS}s</span>
+									<span>{MAX_CHOICE_RETRY_PENALTY_SECONDS}s</span>
+								</div>
+							</div>
+						{/if}
+					{/if}
 
 					<p class="error" role="alert">{formError ?? ''}</p>
 					{#if apiError}

@@ -13,6 +13,7 @@
 import { sealRoundPack, generateSessionSeed } from '../../src/lib/answerpack.js';
 import { buildAnswerKey } from '../../src/lib/game/match.js';
 import { CURRENT_CURVE_VERSION } from '../../src/lib/game/scoring.js';
+import { DEFAULT_QUIZ_SETTINGS } from '../../src/lib/game/types.js';
 import type {
 	ManifestRound,
 	QuizSettings,
@@ -40,7 +41,7 @@ export interface BuildManifestOptions {
 	sessionId: string;
 	quizId: string;
 	tracks: FixtureTrack[];
-	settings: QuizSettings;
+	settings: Partial<QuizSettings>;
 	/** Choice-mode distractors (ANS-6/7). Omitted rounds get `choices: null` (free-text). */
 	choicesFor?: (track: FixtureTrack, position: number, all: FixtureTrack[]) => RoundChoices;
 }
@@ -61,6 +62,7 @@ function buildRoundPack(track: FixtureTrack): RoundPack {
 
 export async function buildManifest(opts: BuildManifestOptions): Promise<SessionManifest> {
 	const sessionSeed = generateSessionSeed();
+	const settings: QuizSettings = { ...DEFAULT_QUIZ_SETTINGS, ...opts.settings };
 
 	const rounds: ManifestRound[] = await Promise.all(
 		opts.tracks.map(async (track, position): Promise<ManifestRound> => {
@@ -80,10 +82,10 @@ export async function buildManifest(opts: BuildManifestOptions): Promise<Session
 		quizId: opts.quizId,
 		rounds,
 		sessionSeed,
-		settings: opts.settings,
+		settings,
 		// No extended-input override in these tests (that's Phase 2/A11Y-5) —
 		// effective mode is always just the quiz's own setting.
-		effectiveScoringMode: opts.settings.scoringMode,
+		effectiveScoringMode: settings.scoringMode,
 		curveVersion: CURRENT_CURVE_VERSION
 	};
 }

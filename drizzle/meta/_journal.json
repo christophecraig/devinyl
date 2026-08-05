@@ -15,6 +15,13 @@
       "when": 1785775901745,
       "tag": "0001_pretty_magneto",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785929209671,
+      "tag": "0002_special_nova",
+      "breakpoints": true
     }
   ]
 }

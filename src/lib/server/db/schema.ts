@@ -218,6 +218,12 @@ export const quiz = sqliteTable(
 		scoringMode: text('scoring_mode', { enum: ['speed', 'fixed'] })
 			.notNull()
 			.default('speed'),
+		/** QUIZ-7 — only meaningful when `answerMode === 'choice'` (ANS-7/8). */
+		choiceRetryMode: text('choice_retry_mode', { enum: ['oneShot', 'penalty'] })
+			.notNull()
+			.default('oneShot'),
+		/** QUIZ-7/ANS-8 — 0-10s, only used when `choiceRetryMode === 'penalty'`. */
+		choiceRetryPenaltySeconds: integer('choice_retry_penalty_seconds').notNull().default(3),
 		/** SCORE-6 — stamped at creation, frozen for the quiz's lifetime. */
 		curveVersion: integer('curve_version').notNull().default(1),
 

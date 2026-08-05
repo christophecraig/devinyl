@@ -33,12 +33,24 @@
  *
  * ## Clip duration and natural end — extending GamePorts
  *
+ * ## Settlement and early round end (ROUND-3, QUIZ-7)
+ *
+ * A required target is "settled" once no further guess can change its
+ * outcome this round — `runtime.settled` tracks this, separately from
+ * `runtime.locked`/`lockedTargets` (correct answers only, which is what
+ * scoring reads). A correct guess always settles its target. A wrong guess
+ * settles its target only under choice mode's `oneShot` retry policy
+ * (ANS-7) — under `penalty` (ANS-8) or free text (ANS-4), a wrong guess
+ * never settles anything, since the player can try again. The round ends
+ * early, without waiting out the clip, the moment every required target is
+ * settled.
+ *
  * `RoundResultPayload.clipMs` must be the round's *measured* decoded-buffer
  * duration (§9's curve denominator), not the elapsed time at lock-in — the
  * two differ whenever a round ends early (ROUND-3). The literal `GamePorts`
  * contract (now/playClip/stopClip/onRoundStart/onRoundResult/onComplete)
  * has no channel for that duration, nor for "the clip reached its natural
- * end without every target locking" (the non-early half of ROUND-3,
+ * end without every target settling" (the non-early half of ROUND-3,
  * §7.4 "otherwise ends at buffer end") — `playClip`'s promise settles when
  * playback *begins*, not ends, and there is deliberately no `pause`/`seek`/
  * event surface on the audio engine to repurpose (see audio.ts's module
@@ -49,7 +61,7 @@
  * (which owns the `AudioBufferSourceNode` and therefore both pieces of
  * information) to call. Both are optional to call from a test's point of
  * view: `reportClipDuration()` falls back to `now()` at round-end if never
- * called, and early end (all targets locked) never needs
+ * called, and early end (all targets settled) never needs
  * `notifyClipEnded()` at all.
  */
 
@@ -129,16 +141,20 @@ interface RoundRuntime {
 	guessLog: GuessLog;
 	lockTimes: Partial<Record<TargetName, number>>;
 	locked: Set<TargetName>;
+	/** ROUND-3/QUIZ-7: targets no longer accepting guesses this round — see module doc. */
+	settled: Set<TargetName>;
 }
 
 function freshRuntime(): RoundRuntime {
-	return { guessLog: [], lockTimes: {}, locked: new Set() };
+	return { guessLog: [], lockTimes: {}, locked: new Set(), settled: new Set() };
 }
 
 class GameImpl implements Game {
 	private readonly manifest: SessionManifest;
 	private readonly ports: GamePorts;
 	private readonly required: TargetName[];
+	/** ANS-7: choice mode's `oneShot` retry policy settles a target on a wrong pick too. */
+	private readonly oneShotChoice: boolean;
 
 	private phaseState = $state<GamePhase>('idle');
 	private roundIndexState = $state(0);
@@ -166,6 +182,8 @@ class GameImpl implements Game {
 		this.manifest = manifest;
 		this.ports = ports;
 		this.required = requiredTargetsFor(manifest.settings);
+		this.oneShotChoice =
+			manifest.settings.answerMode === 'choice' && manifest.settings.choiceRetryMode === 'oneShot';
 	}
 
 	get phase(): GamePhase {
@@ -213,17 +231,22 @@ class GameImpl implements Game {
 		// are free retries the server can still see (§7.2, §7.3 step 1).
 		this.runtime.guessLog = [...this.runtime.guessLog, attempt];
 
-		if (this.runtime.locked.has(target)) return; // already locked: log only, no re-match needed
+		if (this.runtime.settled.has(target)) return; // settled already: log only, no re-match needed
 
 		const accepted = this.currentPack !== null && match(raw, this.currentPack.answers[target]);
-		if (!accepted) return;
+		if (accepted) {
+			this.runtime.locked.add(target);
+			this.runtime.lockTimes = { ...this.runtime.lockTimes, [target]: atMs };
+			this.lockedTargetsState = [...this.runtime.locked];
+			this.runtime.settled.add(target);
+		} else if (this.oneShotChoice) {
+			this.runtime.settled.add(target); // ANS-7: a wrong pick is still final
+		} else {
+			return; // free retry (ANS-4 text, or ANS-8 choice penalty — component paces retries itself)
+		}
 
-		this.runtime.locked.add(target);
-		this.runtime.lockTimes = { ...this.runtime.lockTimes, [target]: atMs };
-		this.lockedTargetsState = [...this.runtime.locked];
-
-		const allLocked = this.required.every((t) => this.runtime.locked.has(t));
-		if (allLocked) this.endRound(false); // ROUND-3: early end, don't wait out the clip
+		const allSettled = this.required.every((t) => this.runtime.settled.has(t));
+		if (allSettled) this.endRound(false); // ROUND-3: early end, don't wait out the clip
 	}
 
 	advance(): void {
