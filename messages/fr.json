@@ -234,5 +234,23 @@
 	"title_quiz_lobby": "Devinyl — {name}",
 	"quiz_lobby_description": "Un quiz Devinyl de {count} manches. Devine le titre, cours contre le chrono.",
 	"quiz_lobby_og_description": "Un quiz Devinyl de {count} manches.",
-	"quiz_lobby_eyebrow": "Quiz · {count} manches"
+	"quiz_lobby_eyebrow": "Quiz · {count} manches",
+
+	"auth_error_display_name_length": "Le pseudo doit faire entre {min} et {max} caractères.",
+	"auth_error_display_name_blocked": "Ce pseudo n'est pas disponible. Choisis-en un autre.",
+	"auth_error_display_name_taken": "Ce pseudo est déjà pris. Choisis-en un autre.",
+	"auth_error_display_name_taken_suggestion": "Ce pseudo est déjà pris. Essaie « {suggestion} » ?",
+	"auth_error_age_gate": "Tu dois avoir au moins {age} ans pour créer un compte.",
+
+	"title_complete_profile": "Devinyl — Complète ton profil",
+	"complete_profile_heading": "Encore une chose",
+	"complete_profile_intro": "Google ne nous transmet pas ton année de naissance, et on en a besoin pour confirmer que tu as l'âge requis.",
+	"complete_profile_label_display_name": "Pseudo",
+	"complete_profile_label_birth_year": "Année de naissance",
+	"complete_profile_birth_year_hint": "Tu dois avoir au moins {age} ans pour utiliser Devinyl.",
+	"complete_profile_button_submitting": "Enregistrement…",
+	"complete_profile_button_submit": "Continuer",
+
+	"auth_or_divider": "ou",
+	"auth_continue_with_google": "Continuer avec Google"
 }

@@ -238,6 +238,35 @@ export async function signOut(): Promise<void> {
 	await send<void>('/api/auth/sign-out', { method: 'POST' });
 }
 
+/**
+ * Google sign-in (ACC-3). Better Auth's `/sign-in/social` doesn't set a
+ * session itself — it hands back an authorize URL on Google's own domain,
+ * and the actual sign-in completes when Google redirects back to
+ * `/api/auth/callback/google` (see `auth.ts`'s module doc for what happens
+ * to a first-time signer there). A full navigation, not a `fetch`.
+ */
+export async function signInWithGoogle(): Promise<void> {
+	const { url } = await send<{ url: string }>('/api/auth/sign-in/social', {
+		method: 'POST',
+		body: JSON.stringify({ provider: 'google', callbackURL: '/' })
+	});
+	location.assign(url);
+}
+
+/**
+ * `/complete-profile` — closes the OAuth/age-gate gap `auth.ts`'s module doc
+ * describes: a Google sign-in has no birth year to submit at account
+ * creation, so it's collected here instead, through Better Auth's own
+ * `update-user` route (runs the same `assertOldEnough`/`validateDisplayName`
+ * hooks the credential signup path always ran, just later).
+ */
+export async function completeProfile(body: {
+	displayName: string;
+	birthYear: number;
+}): Promise<unknown> {
+	return send('/api/auth/update-user', { method: 'POST', body: JSON.stringify(body) });
+}
+
 /** ACC-4 — imports the local guest blob once, right after sign-up. */
 export async function importGuestHistory(body: ImportGuestBody): Promise<{
 	reattributedSessions: number;

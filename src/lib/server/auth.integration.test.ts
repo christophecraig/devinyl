@@ -93,4 +93,90 @@ describe('Better Auth (task 2.2)', () => {
 		const second = await signUp({ email: 'second@example.test', displayName: 'emile' });
 		expect(second.status).toBe(409);
 	});
+
+	/**
+	 * `/complete-profile`'s only server-side enforcement: `update.before`
+	 * running the exact same `assertOldEnough` the credential signup path
+	 * always ran, just at update time instead of create time (auth.ts's
+	 * module doc). The OAuth *creation* path itself (`create.before`'s
+	 * `context.path !== '/sign-up/email'` branch) isn't exercised here — it
+	 * would need a mocked Google token/userinfo exchange to reach through
+	 * Better Auth's real `/callback/google` handler, which is out of scope
+	 * for this pass; the branch is covered by manual verification once
+	 * task 2.1's Google credentials are live (same posture as 1.31/4.13's
+	 * real-device gaps).
+	 */
+	function cookieHeaderFrom(res: Response): string {
+		return res.headers
+			.getSetCookie()
+			.map((c) => c.split(';')[0])
+			.join('; ');
+	}
+
+	/**
+	 * `requireEmailVerification: true` means sign-up itself sets no session
+	 * cookie (Better Auth withholds it until verification) — so getting an
+	 * authenticated session for these tests means verifying, then signing in
+	 * for real, rather than reusing sign-up's response directly.
+	 */
+	async function signInAndGetCookie(
+		auth: ReturnType<typeof createAuth>,
+		email: string
+	): Promise<string> {
+		await db.update(user).set({ emailVerified: true }).where(eq(user.email, email));
+		const signInRes = await auth.handler(
+			new Request('http://localhost:5173/api/auth/sign-in/email', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json', origin: 'http://localhost:5173' },
+				body: JSON.stringify({ email, password: 'correct horse battery staple' })
+			})
+		);
+		expect(signInRes.status).toBeLessThan(300);
+		return cookieHeaderFrom(signInRes);
+	}
+
+	it('rejects setting a birth year under 13 via update-user (LEGAL-1, complete-profile path)', async () => {
+		const auth = createAuth(db, AUTH_ENV);
+		const signUpRes = await signUp({ email: 'birthday@example.test' });
+		expect(signUpRes.status).toBeLessThan(300);
+		const cookie = await signInAndGetCookie(auth, 'birthday@example.test');
+
+		const res = await auth.handler(
+			new Request('http://localhost:5173/api/auth/update-user', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json', cookie, origin: 'http://localhost:5173' },
+				body: JSON.stringify({ birthYear: new Date().getUTCFullYear() - 10 })
+			})
+		);
+		expect(res.status).toBe(400);
+
+		const [row] = await db.select().from(user).where(eq(user.email, 'birthday@example.test'));
+		// The already-valid signup birthYear must survive a rejected update —
+		// assertOldEnough throws before any write happens.
+		expect(row.birthYear).toBe(new Date().getUTCFullYear() - 20);
+	});
+
+	it('accepts a valid birth year via update-user, closing out a null birthYear', async () => {
+		const auth = createAuth(db, AUTH_ENV);
+		const signUpRes = await signUp({ email: 'complete@example.test' });
+		expect(signUpRes.status).toBeLessThan(300);
+		const cookie = await signInAndGetCookie(auth, 'complete@example.test');
+
+		// Simulates the moment `/complete-profile` closes: a row with
+		// birthYear NULL (as an OAuth bootstrap would leave it) gets a valid
+		// year written through the exact same endpoint that page calls.
+		await db.update(user).set({ birthYear: null }).where(eq(user.email, 'complete@example.test'));
+
+		const res = await auth.handler(
+			new Request('http://localhost:5173/api/auth/update-user', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json', cookie, origin: 'http://localhost:5173' },
+				body: JSON.stringify({ birthYear: new Date().getUTCFullYear() - 20 })
+			})
+		);
+		expect(res.status).toBeLessThan(300);
+
+		const [row] = await db.select().from(user).where(eq(user.email, 'complete@example.test'));
+		expect(row.birthYear).toBe(new Date().getUTCFullYear() - 20);
+	});
 });

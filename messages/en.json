@@ -234,5 +234,23 @@
 	"title_quiz_lobby": "Devinyl — {name}",
 	"quiz_lobby_description": "A {count}-round Devinyl quiz. Guess the song, race the clock.",
 	"quiz_lobby_og_description": "A {count}-round Devinyl quiz.",
-	"quiz_lobby_eyebrow": "Quiz · {count} rounds"
+	"quiz_lobby_eyebrow": "Quiz · {count} rounds",
+
+	"auth_error_display_name_length": "Display name must be between {min} and {max} characters.",
+	"auth_error_display_name_blocked": "That name isn't available. Please choose a different one.",
+	"auth_error_display_name_taken": "That name is taken. Please choose a different one.",
+	"auth_error_display_name_taken_suggestion": "That name is taken. Try \"{suggestion}\"?",
+	"auth_error_age_gate": "You must be at least {age} years old to create an account.",
+
+	"title_complete_profile": "Devinyl — Complete your profile",
+	"complete_profile_heading": "One more thing",
+	"complete_profile_intro": "Google doesn't tell us your birth year, and we need it to confirm you're old enough to play.",
+	"complete_profile_label_display_name": "Display name",
+	"complete_profile_label_birth_year": "Birth year",
+	"complete_profile_birth_year_hint": "You must be at least {age} to use Devinyl.",
+	"complete_profile_button_submitting": "Saving…",
+	"complete_profile_button_submit": "Continue",
+
+	"auth_or_divider": "or",
+	"auth_continue_with_google": "Continue with Google"
 }

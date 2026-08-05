@@ -18,12 +18,29 @@
  * `Where` DSL.
  *
  * Google (ACC-3) is only registered when both `GOOGLE_CLIENT_ID` and
- * `GOOGLE_CLIENT_SECRET` are set — task 2.1 is `[USER]`, so in every
- * environment today that's neither. **Known gap for whoever wires it**: a
- * Google sign-in has no `birthYear` to submit, so it will hit the same
- * `create.before` age gate and fail closed. Closing that gap needs a
- * post-OAuth "complete your profile" step this codebase doesn't have yet —
- * out of scope while the provider itself is unreachable.
+ * `GOOGLE_CLIENT_SECRET` are set — task 2.1 is `[USER]`.
+ *
+ * **The OAuth/age-gate split.** Google never hands back a birth year, so the
+ * `create.before` hook cannot run the same strict check it runs for
+ * `/sign-up/email` — there is nothing to check yet, and throwing here would
+ * silently drop the OAuth callback with no user or account row ever created
+ * (`createOAuthUser` calls straight into `createWithHooks`; a hook throw
+ * propagates with nothing to roll back, but also nothing to recover from —
+ * the player just bounces off a dead sign-in button). `context?.path` is
+ * Better Auth's own established way to tell providers apart inside a single
+ * shared hook (its `username` plugin does the same `context.path ===
+ * "/sign-up/email"` check) — only that one path gets the full strict
+ * validation; everything else (in practice, only the Google callback while
+ * this app has one social provider) gets a lenient bootstrap that can never
+ * fail closed: `displayName` is derived from the provider's name and
+ * de-collided automatically (never surfaced as a signup error — there is no
+ * form yet for an OAuth user to correct it on), and `birthYear` is left
+ * unset. The account exists but is incomplete; `birthYear IS NULL` doubles
+ * as that flag (no separate column) and `/complete-profile` (root
+ * `+layout.server.ts`) is where every signed-in request gets redirected
+ * until it's filled in via `POST /api/auth/update-user`, which runs back
+ * through `update.before` below — the same `assertOldEnough` the credential
+ * path always ran, just at a different point in the flow. See plan §G-24.
  */
 
 import { betterAuth, APIError } from 'better-auth';
@@ -31,14 +48,16 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { eq } from 'drizzle-orm';
 import { normalize } from '$lib/game/normalize.js';
 import { MIN_SIGNUP_AGE } from '$lib/game/types.js';
+import { m } from '$lib/paraglide/messages.js';
 import type { Db } from './db/index.js';
 import * as schema from './db/schema.js';
 import { user } from './db/schema.js';
-import { isBlockedName, nameRejectionMessage } from './profanity.js';
+import { isBlockedName } from './profanity.js';
 import { sendEmail } from './email.js';
 
 const MIN_DISPLAY_NAME_LENGTH = 2;
 const MAX_DISPLAY_NAME_LENGTH = 24;
+const OAUTH_FALLBACK_DISPLAY_NAME = 'Player';
 
 export interface AuthEnv {
 	BETTER_AUTH_SECRET: string;
@@ -50,13 +69,19 @@ export interface AuthEnv {
 
 function validateDisplayName(raw: unknown): string {
 	const displayName = typeof raw === 'string' ? raw.trim() : '';
-	if (displayName.length < MIN_DISPLAY_NAME_LENGTH || displayName.length > MAX_DISPLAY_NAME_LENGTH) {
+	if (
+		displayName.length < MIN_DISPLAY_NAME_LENGTH ||
+		displayName.length > MAX_DISPLAY_NAME_LENGTH
+	) {
 		throw new APIError('BAD_REQUEST', {
-			message: `Display name must be between ${MIN_DISPLAY_NAME_LENGTH} and ${MAX_DISPLAY_NAME_LENGTH} characters.`
+			message: m.auth_error_display_name_length({
+				min: MIN_DISPLAY_NAME_LENGTH,
+				max: MAX_DISPLAY_NAME_LENGTH
+			})
 		});
 	}
 	if (isBlockedName(displayName)) {
-		throw new APIError('BAD_REQUEST', { message: nameRejectionMessage() });
+		throw new APIError('BAD_REQUEST', { message: m.auth_error_display_name_blocked() });
 	}
 	return displayName;
 }
@@ -102,8 +127,8 @@ async function assertDisplayNameAvailable(
 	const suggestion = await suggestAvailableDisplayName(db, displayName, excludeUserId);
 	throw new APIError('CONFLICT', {
 		message: suggestion
-			? `That name is taken. Try "${suggestion}"?`
-			: 'That name is taken. Please choose a different one.'
+			? m.auth_error_display_name_taken_suggestion({ suggestion })
+			: m.auth_error_display_name_taken()
 	});
 }
 
@@ -112,9 +137,41 @@ function assertOldEnough(birthYear: unknown): void {
 	const year = typeof birthYear === 'number' ? birthYear : Number(birthYear);
 	if (!Number.isInteger(year) || new Date().getUTCFullYear() - year < MIN_SIGNUP_AGE) {
 		throw new APIError('BAD_REQUEST', {
-			message: `You must be at least ${MIN_SIGNUP_AGE} years old to create an account.`
+			message: m.auth_error_age_gate({ age: MIN_SIGNUP_AGE })
 		});
 	}
+}
+
+/**
+ * OAuth bootstrap for `displayName` (see module doc) — never throws, always
+ * returns something valid and free. `rawName` is the provider's own name
+ * claim (Google: `raw.name`, mapped by Better Auth's base `User` schema
+ * before this hook runs); anything unusable collapses to a fixed fallback
+ * rather than surfacing a signup error there is no form to show it on yet.
+ */
+async function deriveOAuthDisplayName(
+	db: Db,
+	rawName: unknown
+): Promise<{ displayName: string; displayNameNormalized: string }> {
+	let base = typeof rawName === 'string' ? rawName.trim() : '';
+	if (base.length < MIN_DISPLAY_NAME_LENGTH) base = OAUTH_FALLBACK_DISPLAY_NAME;
+	if (base.length > MAX_DISPLAY_NAME_LENGTH) base = base.slice(0, MAX_DISPLAY_NAME_LENGTH);
+	if (isBlockedName(base)) base = OAUTH_FALLBACK_DISPLAY_NAME;
+
+	const [collision] = await db
+		.select({ id: user.id })
+		.from(user)
+		.where(eq(user.displayNameNormalized, normalize(base)))
+		.limit(1);
+	if (!collision) return { displayName: base, displayNameNormalized: normalize(base) };
+
+	// Taken — ACC-5's own suggestion loop, just applied automatically instead
+	// of asking the player (there's no UI to ask on yet). A 4-digit random
+	// suffix is the fallback for the vanishingly unlikely case every
+	// `${base}2..99` slot from `suggestAvailableDisplayName` is also taken.
+	const suggestion = await suggestAvailableDisplayName(db, base);
+	const displayName = suggestion ?? `${base}${Math.floor(1000 + Math.random() * 9000)}`;
+	return { displayName, displayNameNormalized: normalize(displayName) };
 }
 
 export function createAuth(db: Db, env: AuthEnv) {
@@ -170,7 +227,15 @@ export function createAuth(db: Db, env: AuthEnv) {
 				displayNameNormalized: { type: 'string', required: false, input: false },
 				avatarUrl: { type: 'string', required: false, input: true },
 				locale: { type: 'string', required: false, input: true, defaultValue: 'fr' },
-				birthYear: { type: 'number', required: true, input: true },
+				// Not `required: true`: the credential path's own requirement is
+				// enforced by `create.before`'s `assertOldEnough` below regardless
+				// of this flag, and OAuth accounts genuinely have no value to give
+				// at creation time — a framework-level required check here would
+				// have nothing to gate on but the field's mere presence, and could
+				// only get in the way of the OAuth path's deferred-completion
+				// design (module doc), never usefully strengthen the credential
+				// path's own hook-enforced check.
+				birthYear: { type: 'number', required: false, input: true },
 				extendedInput: { type: 'boolean', required: false, input: true, defaultValue: false },
 				isOperator: { type: 'boolean', required: false, input: false, defaultValue: false }
 			}
@@ -179,16 +244,31 @@ export function createAuth(db: Db, env: AuthEnv) {
 		databaseHooks: {
 			user: {
 				create: {
-					before: async (raw) => {
-						const displayName = validateDisplayName(raw.displayName);
-						assertOldEnough(raw.birthYear);
-						const displayNameNormalized = normalize(displayName);
-						await assertDisplayNameAvailable(db, displayName, displayNameNormalized);
+					before: async (raw, context) => {
+						if (context?.path === '/sign-up/email') {
+							const displayName = validateDisplayName(raw.displayName);
+							assertOldEnough(raw.birthYear);
+							const displayNameNormalized = normalize(displayName);
+							await assertDisplayNameAvailable(db, displayName, displayNameNormalized);
+							return { data: { ...raw, displayName, displayNameNormalized } };
+						}
+
+						// OAuth bootstrap (module doc) — never throws, birthYear stays unset.
+						const { displayName, displayNameNormalized } = await deriveOAuthDisplayName(
+							db,
+							raw.displayName ?? raw.name
+						);
 						return { data: { ...raw, displayName, displayNameNormalized } };
 					}
 				},
 				update: {
 					before: async (partial) => {
+						// The completion step (and any future birth-year edit) runs the
+						// exact same age gate the credential signup path always ran —
+						// just deferred to whenever `birthYear` actually gets set.
+						if (typeof partial.birthYear !== 'undefined') {
+							assertOldEnough(partial.birthYear);
+						}
 						if (typeof partial.displayName !== 'string') return;
 						const displayName = validateDisplayName(partial.displayName);
 						const displayNameNormalized = normalize(displayName);

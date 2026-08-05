@@ -4,9 +4,11 @@
 	 */
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { signIn, ApiError } from '$lib/client/api.js';
+	import { signIn, signInWithGoogle, ApiError } from '$lib/client/api.js';
 	import { m } from '$lib/paraglide/messages.js';
-	import { localizeApiErrorCode } from '$lib/client/errors.js';
+	import type { PageProps } from './$types';
+
+	const { data }: PageProps = $props();
 
 	let email = $state('');
 	let password = $state('');
@@ -23,9 +25,24 @@
 			await signIn({ email, password });
 			await goto(resolve('/(app)'));
 		} catch (err) {
-			error = err instanceof ApiError ? localizeApiErrorCode(err.code) : m.api_error_internal();
+			// Better Auth's own error responses carry only `message`, no `code`
+			// our envelope understands (`send()`'s `code` default of 'internal'
+			// would be actively misleading here) — this app's own hook messages
+			// in `auth.ts` are localized at the source via Paraglide; Better
+			// Auth's built-in ones (wrong password, etc.) stay English, a known
+			// scope boundary rather than a re-implementation of its i18n.
+			error = err instanceof ApiError ? err.message : m.api_error_internal();
 		} finally {
 			submitting = false;
+		}
+	}
+
+	async function handleGoogle(): Promise<void> {
+		error = null;
+		try {
+			await signInWithGoogle(); // navigates away on success — nothing to await after
+		} catch (err) {
+			error = err instanceof ApiError ? err.message : m.api_error_internal();
 		}
 	}
 </script>
@@ -60,6 +77,14 @@
 				{submitting ? m.login_button_submitting() : m.login_button_submit()}
 			</button>
 		</form>
+
+		{#if data.googleEnabled}
+			<div class="divider" role="separator"><span>{m.auth_or_divider()}</span></div>
+			<button class="start" type="button" onclick={handleGoogle}>
+				{m.auth_continue_with_google()}
+			</button>
+		{/if}
+
 		<p class="switch">
 			{m.login_switch_prompt()} <a href={resolve('/(app)/signup')}>{m.login_switch_link()}</a>
 		</p>
@@ -106,6 +131,24 @@
 	.start {
 		align-self: stretch;
 		margin-top: var(--space-1);
+	}
+
+	.divider {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		font-size: var(--text-micro);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+	}
+
+	.divider::before,
+	.divider::after {
+		content: '';
+		flex: 1;
+		height: 1px;
+		background: var(--rule);
 	}
 
 	.switch {

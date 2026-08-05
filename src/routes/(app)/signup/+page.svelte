@@ -2,9 +2,11 @@
 	/**
 	 * Sign up — technical-spec §12, plan task 2.2/2.5 (ACC-3, ACC-4, LEGAL-1).
 	 *
-	 * Email+password only here — Google (ACC-3) has no credentials yet (task
-	 * 2.1, [USER]) so `auth.ts` never registers the provider, and there is
-	 * nothing for a "Sign up with Google" button to call.
+	 * Google (ACC-3) renders a "Continue with Google" button once
+	 * `data.googleEnabled` is true (task 2.1's credentials are set) — a
+	 * first-time Google signer skips this form entirely and instead lands on
+	 * `/complete-profile` after the OAuth callback, since Google never hands
+	 * back a birth year (see `auth.ts`'s module doc).
 	 *
 	 * On success: import the local guest blob (ACC-4) so this account doesn't
 	 * lose the history it played before signing up, clear the blob (a stale
@@ -13,11 +15,13 @@
 	 */
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { signUp, importGuestHistory, ApiError } from '$lib/client/api.js';
+	import { signUp, signInWithGoogle, importGuestHistory, ApiError } from '$lib/client/api.js';
 	import { loadGuest, clearGuest } from '$lib/client/guest.js';
 	import { MIN_SIGNUP_AGE } from '$lib/game/types.js';
 	import { m } from '$lib/paraglide/messages.js';
-	import { localizeApiErrorCode } from '$lib/client/errors.js';
+	import type { PageProps } from './$types';
+
+	const { data }: PageProps = $props();
 
 	let email = $state('');
 	let password = $state('');
@@ -59,9 +63,22 @@
 
 			await goto(resolve('/(app)'));
 		} catch (err) {
-			error = err instanceof ApiError ? localizeApiErrorCode(err.code) : m.api_error_internal();
+			// Same rationale as login/+page.svelte: Better Auth's error body has
+			// no `code`, and this app's own hook messages (auth.ts) are
+			// localized at the source, so the raw message is the right thing
+			// to show — see that file's comment for the full explanation.
+			error = err instanceof ApiError ? err.message : m.api_error_internal();
 		} finally {
 			submitting = false;
+		}
+	}
+
+	async function handleGoogle(): Promise<void> {
+		error = null;
+		try {
+			await signInWithGoogle(); // navigates away on success — nothing to await after
+		} catch (err) {
+			error = err instanceof ApiError ? err.message : m.api_error_internal();
 		}
 	}
 </script>
@@ -123,6 +140,14 @@
 				{submitting ? m.signup_button_submitting() : m.signup_button_submit()}
 			</button>
 		</form>
+
+		{#if data.googleEnabled}
+			<div class="divider" role="separator"><span>{m.auth_or_divider()}</span></div>
+			<button class="start" type="button" onclick={handleGoogle}>
+				{m.auth_continue_with_google()}
+			</button>
+		{/if}
+
 		<p class="switch">
 			{m.signup_switch_prompt()} <a href={resolve('/(app)/login')}>{m.signup_switch_link()}</a>
 		</p>
@@ -175,6 +200,24 @@
 	.start {
 		align-self: stretch;
 		margin-top: var(--space-1);
+	}
+
+	.divider {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		font-size: var(--text-micro);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--ink-faint);
+	}
+
+	.divider::before,
+	.divider::after {
+		content: '';
+		flex: 1;
+		height: 1px;
+		background: var(--rule);
 	}
 
 	.switch {
