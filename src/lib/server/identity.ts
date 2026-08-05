@@ -13,7 +13,10 @@
  *     and FAIR-7 are the compensations, and both fail open (§7.3 step 6).
  */
 
+import { eq } from 'drizzle-orm';
 import { guestIdSchema, nicknameSchema } from '$lib/game/schemas.js';
+import type { Db } from './db/index.js';
+import { user } from './db/schema.js';
 import { apiError } from './http.js';
 import { isBlockedName, nameRejectionMessage } from './profanity.js';
 
@@ -45,6 +48,17 @@ export function requirePlayer(locals: App.Locals): Player {
 export function requireUserId(locals: App.Locals): string {
 	if (!locals.userId) apiError('unauthorized', 'Sign in to do this.');
 	return locals.userId;
+}
+
+/** §15 operator role — gates `/admin` and official/daily curation (CREATE-8/9, FAIR-1). */
+export async function loadIsOperator(db: Db, player: Player): Promise<boolean> {
+	if (player.kind !== 'user') return false;
+	const [row] = await db
+		.select({ isOperator: user.isOperator })
+		.from(user)
+		.where(eq(user.id, player.userId))
+		.limit(1);
+	return row?.isOperator ?? false;
 }
 
 /**

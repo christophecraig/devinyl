@@ -33,11 +33,11 @@ import {
 	quizTrack,
 	roundResult,
 	trackCache,
-	user,
 	weeklyPoints
 } from '../db/schema.js';
 import { parisIsoWeek } from '../time.js';
 import type { Player } from '../identity.js';
+import { loadIsOperator } from '../identity.js';
 import { loadOwnedSession } from './create.js';
 import { loadRoundResults, mergeQueuedBeacons, recordRoundResult } from './rounds.js';
 import {
@@ -286,16 +286,6 @@ async function loadRevalidateRounds(
 // ---------------------------------------------------------------------------
 // Identity blocks (DB-backed side of the pure functions above)
 // ---------------------------------------------------------------------------
-
-async function loadIsOperator(db: Db, player: Player): Promise<boolean> {
-	if (player.kind !== 'user') return false;
-	const [row] = await db
-		.select({ isOperator: user.isOperator })
-		.from(user)
-		.where(eq(user.id, player.userId))
-		.limit(1);
-	return row?.isOperator ?? false;
-}
 
 /**
  * FAIR-2: is there already a scored session for this exact (player, quiz[,
