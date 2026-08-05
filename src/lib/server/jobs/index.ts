@@ -26,7 +26,8 @@ import {
 	gameSession,
 	quiz,
 	quizTrack,
-	rateLimit
+	rateLimit,
+	user
 } from '../db/schema.js';
 
 export type JobKind = 'every-15-min' | 'hourly' | 'daily';
@@ -198,6 +199,33 @@ export async function purgeRateLimitWindows(db: Db, now: number): Promise<number
 	return stale.length;
 }
 
+/**
+ * ACC-6/§16: `delete-account.ts` tombstones a deleted user's row rather than
+ * removing it outright, so the 30-day `deletedEmailHash` window has
+ * somewhere to live. This is the "then purged" the schema comment promises —
+ * once the window passes, the tombstone itself is finally hard-deleted
+ * (cascading session/account/friendship/weekly_points, though delete-account.ts
+ * already cleared those at tombstone time; this is just the leftover shell).
+ */
+export async function purgeDeletedUserTombstones(db: Db, now: number): Promise<number> {
+	const stale = await db
+		.select({ id: user.id })
+		.from(user)
+		.where(and(isNotNull(user.deletedEmailHashExpiresAt), lt(user.deletedEmailHashExpiresAt, now)))
+		.limit(BATCH_SIZE);
+
+	if (stale.length === 0) return 0;
+
+	await db.delete(user).where(
+		inArray(
+			user.id,
+			stale.map((row) => row.id)
+		)
+	);
+
+	return stale.length;
+}
+
 interface JobResult {
 	name: string;
 	ok: boolean;
@@ -239,7 +267,8 @@ export async function runJobs(kind: JobKind, platform: App.Platform): Promise<vo
 			const results = await Promise.all([
 				runOne('sweep-abandoned-sessions', () => sweepAbandonedSessions(db, now)),
 				runOne('purge-daily-guest-claims', () => purgeDailyGuestClaims(db, now)),
-				runOne('purge-rate-limit-windows', () => purgeRateLimitWindows(db, now))
+				runOne('purge-rate-limit-windows', () => purgeRateLimitWindows(db, now)),
+				runOne('purge-deleted-user-tombstones', () => purgeDeletedUserTombstones(db, now))
 			]);
 
 			report(kind, results);

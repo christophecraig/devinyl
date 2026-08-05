@@ -136,9 +136,9 @@ Free-tier budget sanity: Workers 100k req/day, D1 5M reads / 100k writes/day, 5 
 - [ ] **2.7** Quiz management: `POST /api/quizzes`, `PATCH`/`DELETE` (name/description always; **content edits 409 once challenged or scored** — CREATE-3), `POST /:id/duplicate` (CREATE-10), soft delete with graceful dead-link page (CREATE-4). Plus read endpoints missing from §10 (§G): `GET /api/quizzes/:id` (lobby) and `GET /api/me/quizzes`.
 - [ ] **2.8** `POST /api/quizzes/:id/save` for generated quizzes (CREATE-6): sets owner, clears TTL, list frozen forever (CREATE-7).
 - [ ] **2.9** Operator role + `/admin` (§15): operator-gated in hooks; "publish as official" in the builder with localized name/description (CREATE-8, LOC-3); daily-quiz calendar with scheduling + gap warnings (CREATE-9); flagged-sessions view (`scored_block_reason`). Official catalog browse (`GET /api/quizzes/official`, SHARE-3).
-- [ ] **2.10** FAIR-1 creator exclusion in finalize (`'creator'`, incl. operator accounts on official/daily quizzes — §7.3 step 5).
-- [ ] **2.11** Account deletion `DELETE /api/me` (ACC-6, §6 semantics): hard-delete user + cascade auth/friendships/weekly_points; anonymize their rows on others' boards; quizzes → `owner_id NULL` + `deleted_at` (never hard-deleted); email kept as salted hash 30 days (§16).
-- [ ] **2.12** Integration tests: signup age gate, guest→account re-attribution incl. FAIR-2 collision, content-edit lock + duplicate, deletion leaves other players' boards and FKs intact (§17).
+- [x] **2.10** FAIR-1 creator exclusion in finalize (`'creator'`, incl. operator accounts on official/daily quizzes — §7.3 step 5).
+- [x] **2.11** Account deletion `DELETE /api/me` (ACC-6, §6 semantics): tombstoned rather than hard-deleted at once (a later purge, `jobs/index.ts`, removes the row once the 30-day `deletedEmailHash` window passes — §16's "then purged"); cascades auth/friendships/weekly_points now; anonymizes their rows on others' boards; quizzes → `owner_id NULL` + `deleted_at` (never hard-deleted).
+- [x] **2.12** Integration tests: signup age gate, guest→account re-attribution incl. FAIR-2 collision, content-edit lock + duplicate, deletion leaves other players' boards and FKs intact (§17).
 
 **GATE 2:** guest plays → signs up → sees imported history; creates, shares by link, edits-until-frozen, duplicates, deletes; operator publishes an official quiz. CI green.
 

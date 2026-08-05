@@ -187,9 +187,9 @@ describe('runJobs', () => {
 		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		await expect(runJobs('every-15-min', {} as App.Platform)).resolves.toBeUndefined();
 
-		// All three jobs reported a failure rather than one throw taking the batch
+		// All four jobs reported a failure rather than one throw taking the batch
 		// down, and none reached the point of writing.
-		expect(errorSpy).toHaveBeenCalledTimes(3);
+		expect(errorSpy).toHaveBeenCalledTimes(4);
 		expect(throwingDb.update).not.toHaveBeenCalled();
 		expect(throwingDb.delete).not.toHaveBeenCalled();
 		errorSpy.mockRestore();
