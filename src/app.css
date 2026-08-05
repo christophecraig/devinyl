@@ -332,6 +332,9 @@ button.quiet:hover:not(:disabled) {
 /* Underline inputs, not boxes: less chrome on a screen the player is scanning
    under time pressure, and it keeps the page reading like a printed form. */
 input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='number'],
 select {
 	font: inherit;
 	width: 100%;
@@ -347,6 +350,9 @@ select {
 }
 
 input[type='text']:hover:not(:disabled),
+input[type='email']:hover:not(:disabled),
+input[type='password']:hover:not(:disabled),
+input[type='number']:hover:not(:disabled),
 select:hover {
 	border-bottom-color: var(--ink-faint);
 }
@@ -358,16 +364,24 @@ select:hover {
    height by a pixel on every focus. The accent underline here is colour only,
    layered under the ring — never the sole focus indicator. */
 input[type='text']:focus-visible,
+input[type='email']:focus-visible,
+input[type='password']:focus-visible,
+input[type='number']:focus-visible,
 select:focus-visible {
 	border-bottom-color: var(--accent);
 }
 
-input[type='text']:disabled {
+input[type='text']:disabled,
+input[type='email']:disabled,
+input[type='password']:disabled,
+input[type='number']:disabled {
 	color: var(--ink-muted);
 	border-bottom-style: dashed;
 }
 
-input[type='text']::placeholder {
+input[type='text']::placeholder,
+input[type='email']::placeholder,
+input[type='password']::placeholder {
 	color: var(--ink-faint);
 }
 

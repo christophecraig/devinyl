@@ -9,7 +9,6 @@
  * its internal API.
  */
 
-import { env } from 'cloudflare:test';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { createAuth } from './auth.js';

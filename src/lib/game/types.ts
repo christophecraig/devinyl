@@ -61,6 +61,9 @@ export const PRELOAD_CONFIRM_THRESHOLD = 20;
 /** DAILY-1: the daily is deliberately shorter — ~3 minutes a day. */
 export const DAILY_ROUNDS = 5;
 
+/** LEGAL-1: minimum signup age, shared by the server-side check (auth.ts) and the signup form's client-side hint. */
+export const MIN_SIGNUP_AGE = 13;
+
 /** QUIZ-7/ANS-8 penalty-duration bounds. */
 export const MIN_CHOICE_RETRY_PENALTY_SECONDS = 0;
 export const MAX_CHOICE_RETRY_PENALTY_SECONDS = 10;

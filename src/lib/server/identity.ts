@@ -41,6 +41,12 @@ export function requirePlayer(locals: App.Locals): Player {
 	apiError('unauthorized', 'Sign in or send a guest id to play.');
 }
 
+/** Resolve the signed-in account for a route that requires one — never a guest. */
+export function requireUserId(locals: App.Locals): string {
+	if (!locals.userId) apiError('unauthorized', 'Sign in to do this.');
+	return locals.userId;
+}
+
 /**
  * Validate a nickname at a **write** point (FAIR-5: at every point a name is
  * set, never on read). Returns the trimmed name.

@@ -13,6 +13,7 @@ import type {
 	CreateSessionBody,
 	FinalizeSessionBody,
 	GenerationFiltersBody,
+	ImportGuestBody,
 	RoundResultBody
 } from '$lib/game/schemas.js';
 import type { FinalizeResult, SessionManifest } from '$lib/game/types.js';
@@ -130,4 +131,42 @@ export async function finalizeSession(
 		method: 'POST',
 		body: JSON.stringify(body)
 	});
+}
+
+// ---------------------------------------------------------------------------
+// Auth (§12, task 2.2) — Better Auth's own routes, called directly rather
+// than through its client SDK: the server sets the session cookie on the
+// response, same-origin, so there is nothing the SDK would add here.
+// ---------------------------------------------------------------------------
+
+export interface SignUpBody {
+	email: string;
+	password: string;
+	displayName: string;
+	birthYear: number;
+	locale?: 'fr' | 'en';
+}
+
+export async function signUp(body: SignUpBody): Promise<{ user: { id: string } }> {
+	return send('/api/auth/sign-up/email', {
+		method: 'POST',
+		body: JSON.stringify({ ...body, name: body.displayName })
+	});
+}
+
+export async function signIn(body: { email: string; password: string }): Promise<unknown> {
+	return send('/api/auth/sign-in/email', { method: 'POST', body: JSON.stringify(body) });
+}
+
+export async function signOut(): Promise<void> {
+	await send<void>('/api/auth/sign-out', { method: 'POST' });
+}
+
+/** ACC-4 — imports the local guest blob once, right after sign-up. */
+export async function importGuestHistory(body: ImportGuestBody): Promise<{
+	reattributedSessions: number;
+	demotedToReplay: number;
+	importedHistoryRows: number;
+}> {
+	return send('/api/me/import-guest', { method: 'POST', body: JSON.stringify(body) });
 }

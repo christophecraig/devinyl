@@ -211,3 +211,14 @@ export function recordDailyPlay(parisDay: string): GuestIdentity {
 export function guestHeaders(): Record<string, string> {
 	return { 'x-guest-id': loadGuest().guestId };
 }
+
+/**
+ * ACC-4: drops the local blob once its contents have been imported into a
+ * fresh account. A new `guestId` is minted (not reused) so a stale
+ * `x-guest-id` header sent by an in-flight request from before the import
+ * can never re-attribute a *second* account's sessions onto the first.
+ */
+export function clearGuest(): void {
+	cached = freshIdentity();
+	persist(cached);
+}

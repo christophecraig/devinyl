@@ -30,13 +30,13 @@ import { betterAuth, APIError } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { eq } from 'drizzle-orm';
 import { normalize } from '$lib/game/normalize.js';
+import { MIN_SIGNUP_AGE } from '$lib/game/types.js';
 import type { Db } from './db/index.js';
 import * as schema from './db/schema.js';
 import { user } from './db/schema.js';
 import { isBlockedName, nameRejectionMessage } from './profanity.js';
 import { sendEmail } from './email.js';
 
-export const MIN_SIGNUP_AGE = 13;
 const MIN_DISPLAY_NAME_LENGTH = 2;
 const MAX_DISPLAY_NAME_LENGTH = 24;
 

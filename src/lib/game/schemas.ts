@@ -236,18 +236,22 @@ export const signupExtrasSchema = z.object({
 	locale: localeSchema.optional()
 });
 
-/** ACC-4 guest import: the local blob plus the guestId whose server rows are re-attributed. */
+/**
+ * ACC-4 guest import: the local blob plus the guestId whose server rows are
+ * re-attributed. Deliberately thin — `quizId` is the only pointer the server
+ * needs; `quizName`, round count, and daily-ness are all derived server-side
+ * from the `quiz` row at import time (`sessions/import-guest.ts`) rather than
+ * trusted from the client, which would drift the moment a quiz is renamed.
+ */
 export const importGuestSchema = z.object({
 	guestId: guestIdSchema,
 	history: z
 		.array(
 			z.object({
-				quizId: idSchema.optional(),
-				quizName: z.string().max(80).optional(),
-				totalScore: z.number().int().min(0).max(1_000_000),
-				rounds: z.number().int().min(0).max(MAX_ROUNDS),
-				playedAt: z.number().int().min(0),
-				isDaily: z.boolean().default(false)
+				sessionId: idSchema,
+				quizId: idSchema,
+				score: z.number().int().min(0).max(1_000_000),
+				playedAt: z.number().int().min(0)
 			})
 		)
 		.max(1000)
