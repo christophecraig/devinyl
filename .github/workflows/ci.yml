@@ -5,7 +5,7 @@
 # served locally.
 #
 # `deploy` (added once S.1's CLOUDFLARE_API_TOKEN secret existed) runs only on
-# push to main, after build-and-test passes: applies pending D1 migrations to
+# push to master, after build-and-test passes: applies pending D1 migrations to
 # the remote `devinyl` database, then `wrangler deploy`s the Worker. Migrations
 # run before the code deploy so new columns/tables exist before code that
 # reads them ships — see the devinyl-deployment memory note on migration drift.
@@ -23,7 +23,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [master]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -109,7 +109,7 @@ jobs:
   deploy:
     name: deploy (devinyl)
     needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     environment: production
     concurrency:
