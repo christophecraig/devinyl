@@ -111,6 +111,6 @@ liveness ping fired from `worker/entry.ts` after a cron batch completes
 successfully. It answers a question `wrangler tail` and Sentry both miss: "did
 the Cron Trigger fire at all today?" A Cron Trigger silently failing to
 register (misconfigured `wrangler.jsonc`, a Cloudflare-side issue) produces
-*no* log line anywhere — the healthchecks.io check simply stops receiving
+_no_ log line anywhere — the healthchecks.io check simply stops receiving
 pings, and the service alerts on the gap. See
 docs/implementation-plan.md §L for the [USER] setup step.

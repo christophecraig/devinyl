@@ -4,6 +4,10 @@ export default defineConfig({
 	testDir: 'e2e',
 	testMatch: '**/*.e2e.{ts,js}',
 	webServer: { command: 'pnpm run build && pnpm run preview', port: 4173 },
+	// CI (ci.yml, plan task 4.3) uploads `playwright-report/` as a build
+	// artifact on failure — the default reporter never writes that
+	// directory, so CI needs `html` explicitly. Locally, `list` is quieter.
+	reporter: process.env.CI ? 'html' : 'list',
 	// The solo-play suite (task 1.30) preloads real (synthesized) audio and
 	// waits out 3-2-1 countdowns and clip playback for the live-region
 	// ordering assertions — comfortably longer than Playwright's 30 s default

@@ -24,9 +24,7 @@ describe('captureError', () => {
 	});
 
 	it('logs to console and never throws when dsn is undefined', () => {
-		expect(() =>
-			captureError(undefined, new Error('boom'), { source: 'test' })
-		).not.toThrow();
+		expect(() => captureError(undefined, new Error('boom'), { source: 'test' })).not.toThrow();
 		expect(consoleErrorSpy).toHaveBeenCalled();
 	});
 
@@ -51,7 +49,9 @@ describe('captureError', () => {
 	});
 
 	it('degrades to a console.error, never throwing, when dsn is malformed', () => {
-		expect(() => captureError('not-a-valid-dsn', new Error('boom'), { source: 'test' })).not.toThrow();
+		expect(() =>
+			captureError('not-a-valid-dsn', new Error('boom'), { source: 'test' })
+		).not.toThrow();
 		expect(fetchSpy).not.toHaveBeenCalled();
 	});
 });

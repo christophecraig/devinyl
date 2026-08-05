@@ -1,0 +1,104 @@
+# Plan task 4.3 (§4 perf-budget table + Phase 0.5's never-built S.6). This is
+# deliberately NOT the full S.6 scope: no preview-D1 deploys, no PR preview
+# URLs, no migration gating — those need Cloudflare API tokens in GitHub
+# secrets that don't exist yet (S.1 is [USER], not done). Everything below
+# runs with zero deploy credentials: lint, typecheck, unit/integration tests
+# against local D1, a local `vite build`, a bundle-size budget, Playwright
+# (incl. axe, A11Y-1), and Lighthouse against the built app served locally.
+#
+# Known, deliberate gaps (see docs/implementation-plan.md task 4.3's note):
+#   - Server p95 API latency (§4 table) is NOT measured here — no production
+#     traffic exists yet, and local D1/Miniflare timings aren't
+#     representative of anything. Deferred to task 4.14 (launch checklist).
+#   - Lighthouse's "Fast 3G" throttling is simulated (lighthouserc.cjs),
+#     not a real mobile network — also called out there.
+#   - No preview-deploy or migration-gating jobs — needs S.1/S.6's
+#     Cloudflare secrets, which don't exist in this repo yet.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Quiets wrangler's update-check network call and telemetry ping — CI has
+  # no interactive terminal for the prompt either would otherwise print to.
+  WRANGLER_SEND_METRICS: 'false'
+
+jobs:
+  build-and-test:
+    name: lint, typecheck, test, build, budgets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Local-dev secrets
+        # Copies the placeholder values .dev.vars.example documents (see
+        # that file's header) — `wrangler types` (part of `check`/`build`)
+        # and the D1-backed integration/e2e runs all need *some* value for
+        # IP_HASH_SECRET/BETTER_AUTH_SECRET, and there is no real secret to
+        # leak here: production values only ever live in `wrangler secret`.
+        run: cp .dev.vars.example .dev.vars
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run check
+
+      - name: Unit tests
+        run: pnpm run test:unit
+
+      - name: Integration tests (local D1 via vitest-pool-workers)
+        run: pnpm run test:integration
+
+      - name: Build
+        run: pnpm run build
+
+      - name: 'Bundle-size budget (§4: initial JS < 60 KB gzip, landing/play route)'
+        run: node scripts/check-bundle-size.mjs
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E (incl. axe, A11Y-1 — fails on serious/critical violations)
+        run: pnpm exec playwright test
+
+      - name: 'Lighthouse (§4: LCP < 2.5s, simulated Fast-3G — see lighthouserc.cjs)'
+        run: pnpm exec lhci autorun --config=lighthouserc.cjs
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 14
+          if-no-files-found: ignore
