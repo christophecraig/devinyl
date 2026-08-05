@@ -142,15 +142,22 @@ export async function pickDistractors(opts: PickDistractorsOptions): Promise<str
 			decade: opts.decade,
 			rounds: count * 4 // ask for a generous pool since filtering will drop some
 		};
-		const live = await opts.provider.poolForFilters(filters);
-		for (const track of live) {
-			if (chosen.length >= count) break;
-			if (track.providerId === opts.excludeTrackId) continue;
-			const display =
-				opts.target === 'title'
-					? track.titleShort || track.title
-					: primaryArtistNameFromCatalog(track);
-			tryAdd(display);
+		try {
+			const live = await opts.provider.poolForFilters(filters);
+			for (const track of live) {
+				if (chosen.length >= count) break;
+				if (track.providerId === opts.excludeTrackId) continue;
+				const display =
+					opts.target === 'title'
+						? track.titleShort || track.title
+						: primaryArtistNameFromCatalog(track);
+				tryAdd(display);
+			}
+		} catch (err) {
+			// Same "scarce catalog" degradation as generate.ts's own live-pool
+			// fallback: a bucket too thin to fill live (e.g. the Workers
+			// subrequest cap) yields fewer distractors, not a crash.
+			console.error('[distractors] live pool fallback failed', err);
 		}
 	}
 

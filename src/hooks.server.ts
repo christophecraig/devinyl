@@ -21,9 +21,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.guestId = readGuestId(event.request);
 
 	if (event.platform?.env?.DB) {
-		const auth = createAuth(getDb(event.platform), event.platform.env);
-		const session = await auth.api.getSession({ headers: event.request.headers });
-		event.locals.userId = session?.user.id ?? null;
+		try {
+			const auth = createAuth(getDb(event.platform), event.platform.env);
+			const session = await auth.api.getSession({ headers: event.request.headers });
+			event.locals.userId = session?.user.id ?? null;
+		} catch (err) {
+			// A misconfigured Better Auth (e.g. a missing BETTER_AUTH_SECRET secret
+			// on the deployed Worker) must not 500 every single request — degrade
+			// to "no session", same as the missing-DB-binding case above.
+			console.error('[hooks] session resolution failed', err);
+		}
 	}
 
 	return resolve(event);

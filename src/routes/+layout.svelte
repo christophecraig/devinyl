@@ -15,8 +15,16 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { resolve } from '$app/paths';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { signOut } from '$lib/client/api.js';
 
-	let { children } = $props();
+	let { data, children } = $props();
+
+	async function handleSignOut() {
+		await signOut();
+		await invalidateAll();
+		await goto(resolve('/'));
+	}
 
 	// PWA (task 3.12): SvelteKit auto-registers `src/service-worker.ts` (the
 	// default `kit.serviceWorker.register: true` — no svelte.config.js here to
@@ -39,6 +47,11 @@
 		<nav class="menu" aria-label="Primary">
 			<a href={resolve('/(app)/daily')}>Daily</a>
 			<a href={resolve('/(app)/stats')}>Stats</a>
+			{#if data.loggedIn}
+				<button type="button" class="link-button" onclick={handleSignOut}>Sign out</button>
+			{:else}
+				<a href={resolve('/(app)/login')}>Sign in</a>
+			{/if}
 		</nav>
 	</header>
 
@@ -88,6 +101,19 @@
 	}
 
 	.menu a:hover {
+		color: var(--accent-ink);
+	}
+
+	.link-button {
+		font: inherit;
+		color: var(--ink-muted);
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+	}
+
+	.link-button:hover {
 		color: var(--accent-ink);
 	}
 

@@ -4,6 +4,7 @@
 	 * no unfurl need) — same pattern as `/daily`.
 	 */
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 
 	interface PersonalStats {
 		gamesPlayed: number;
@@ -17,7 +18,7 @@
 	}
 
 	let stats = $state<PersonalStats | null>(null);
-	let error = $state<string | null>(null);
+	let unauthorized = $state(false);
 
 	onMount(() => {
 		fetch('/api/me/stats')
@@ -29,7 +30,7 @@
 				stats = res.stats;
 			})
 			.catch(() => {
-				error = 'Sign in to see your stats.';
+				unauthorized = true;
 			});
 	});
 </script>
@@ -41,8 +42,10 @@
 <main class="sheet">
 	<h1>Your stats</h1>
 
-	{#if error}
-		<p class="error-note">{error}</p>
+	{#if unauthorized}
+		<p class="error-note">
+			<a href={resolve('/(app)/login')}>Sign in</a> to see your stats.
+		</p>
 	{:else if !stats}
 		<p class="waiting">Loading…</p>
 	{:else}

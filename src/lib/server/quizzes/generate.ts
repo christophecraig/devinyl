@@ -147,30 +147,41 @@ export async function generateQuiz(
 
 	for (const row of await poolFromCache(db, filters, filters.rounds * 3)) take(row);
 
+	// The live path can throw partway through — most notably the Workers
+	// platform's own per-invocation subrequest cap when `track_cache` is too
+	// thin for these filters and hydration has to reach Deezer many times
+	// (§8.3's whole reason for existing). That is a *scarce catalog* outcome
+	// from the caller's point of view, identical to running out of candidates,
+	// so it falls through to the same "try different filters" 4xx below rather
+	// than crashing the request.
 	if (chosen.length < filters.rounds) {
-		const candidates = shuffle(
-			await poolFromProvider(provider, filters, filters.rounds * MAX_LIVE_HYDRATIONS_PER_ROUND)
-		);
+		try {
+			const candidates = shuffle(
+				await poolFromProvider(provider, filters, filters.rounds * MAX_LIVE_HYDRATIONS_PER_ROUND)
+			);
 
-		let hydrations = 0;
-		const budget = filters.rounds * MAX_LIVE_HYDRATIONS_PER_ROUND;
+			let hydrations = 0;
+			const budget = filters.rounds * MAX_LIVE_HYDRATIONS_PER_ROUND;
 
-		for (const candidate of candidates) {
-			if (chosen.length >= filters.rounds || hydrations >= budget) break;
-			if (seen.has(candidate.providerId)) continue;
+			for (const candidate of candidates) {
+				if (chosen.length >= filters.rounds || hydrations >= budget) break;
+				if (seen.has(candidate.providerId)) continue;
 
-			hydrations++;
-			// This is also where MUS-5 is enforced at source: a track whose preview
-			// won't play is never written into a quiz.
-			const cached = await ensureTrackCached(db, provider, candidate.providerId);
-			if (!cached.ok) continue;
+				hydrations++;
+				// This is also where MUS-5 is enforced at source: a track whose preview
+				// won't play is never written into a quiz.
+				const cached = await ensureTrackCached(db, provider, candidate.providerId);
+				if (!cached.ok) continue;
 
-			// Decade can only be checked after hydration — search results carry no
-			// release date (§5.2), which is why the filter is applied here rather
-			// than in the provider query.
-			if (filters.decade && decadeOf(cached.row.releaseYear) !== filters.decade) continue;
+				// Decade can only be checked after hydration — search results carry no
+				// release date (§5.2), which is why the filter is applied here rather
+				// than in the provider query.
+				if (filters.decade && decadeOf(cached.row.releaseYear) !== filters.decade) continue;
 
-			take(cached.row as TrackCacheRow);
+				take(cached.row as TrackCacheRow);
+			}
+		} catch (err) {
+			console.error('[quizzes/generate] live catalog pool failed', err);
 		}
 	}
 
