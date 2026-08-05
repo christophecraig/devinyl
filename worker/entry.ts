@@ -41,6 +41,7 @@
 import generated from '../.svelte-kit/cloudflare/_worker.js';
 
 import { runJobs, type JobKind } from '../src/lib/server/jobs/index.js';
+import { captureError } from '../src/lib/server/observability.js';
 
 const app = generated as { fetch: ExportedHandlerFetchHandler };
 
@@ -77,11 +78,30 @@ export default {
 		// `waitUntil` keeps the isolate alive for the whole batch; without it a slow
 		// sweep can be cut off mid-flight.
 		ctx.waitUntil(
-			runJobs(kind, { env, ctx } as unknown as App.Platform).catch((error: unknown) => {
-				// A thrown job must not take the batch down silently — surface it in
-				// `wrangler tail` (the §15 observability story).
-				console.error(`Job batch "${kind}" failed:`, error);
-			})
+			runJobs(kind, { env, ctx } as unknown as App.Platform)
+				.then(() => {
+					// Plan 4.8: a healthchecks.io "ping" (`env.HEALTHCHECKS_URL`, [USER] —
+					// see docs/implementation-plan.md §L) confirms the cron actually
+					// fired, which an HTTP uptime monitor polling /healthz cannot tell
+					// you on its own (a dead Cron Trigger leaves /healthz perfectly
+					// healthy). Fire-and-forget on its own narrower `waitUntil`, gated
+					// on the URL being set, and a ping failure must never read as a job
+					// failure — the batch already ran and reported for itself above.
+					if (env.HEALTHCHECKS_URL) {
+						ctx.waitUntil(
+							fetch(env.HEALTHCHECKS_URL).catch((pingErr: unknown) => {
+								console.error('[healthchecks-ping] failed to reach monitor URL', pingErr);
+							})
+						);
+					}
+				})
+				.catch((error: unknown) => {
+					// A thrown job must not take the batch down silently — surface it in
+					// `wrangler tail` (the §15 observability story) and, once
+					// SENTRY_DSN is set, in Sentry too.
+					console.error(`Job batch "${kind}" failed:`, error);
+					captureError(env.SENTRY_DSN, error, { source: `jobs:${kind}` });
+				})
 		);
 	}
 } satisfies ExportedHandler<Env>;

@@ -19,3 +19,14 @@ GOOGLE_CLIENT_SECRET=""
 # Resend verification email (plan task 2.1 [USER]). Leave blank locally —
 # sendEmail() logs instead of calling the API when this is unset.
 RESEND_API_KEY=""
+
+# Sentry error tracking (plan task 4.8 [USER]). Leave blank locally —
+# captureError() (src/lib/server/observability.ts) only console.errors when
+# unset. Production: `wrangler secret put SENTRY_DSN` with the DSN from a
+# Sentry project's Client Keys settings.
+SENTRY_DSN=""
+
+# healthchecks.io cron-liveness ping (plan task 4.8 [USER]). Leave blank
+# locally — worker/entry.ts skips the ping entirely when unset. Production:
+# `wrangler secret put HEALTHCHECKS_URL` with the check's ping URL.
+HEALTHCHECKS_URL=""

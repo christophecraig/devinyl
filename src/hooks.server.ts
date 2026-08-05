@@ -16,12 +16,13 @@
  * app.html get filled in via `transformPageChunk`.
  */
 
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { createAuth } from '$lib/server/auth.js';
 import { getDb } from '$lib/server/db/index.js';
 import { readGuestId } from '$lib/server/identity.js';
 import { paraglideMiddleware } from '$lib/paraglide/server.js';
 import { getTextDirection } from '$lib/paraglide/runtime.js';
+import { captureError } from '$lib/server/observability.js';
 
 const resolveIdentity: Handle = async ({ event, resolve }) => {
 	event.locals.userId = null;
@@ -41,6 +42,30 @@ const resolveIdentity: Handle = async ({ event, resolve }) => {
 	}
 
 	return resolve(event);
+};
+
+/**
+ * Uncaught server-side errors (thrown out of `load`, an API route, etc.) —
+ * separate from `handle` above, which only wraps identity/locale resolution
+ * and never sees errors thrown further down the chain. This is plan 4.8's
+ * hook point for Sentry: narrowest place that reports every uncaught error
+ * without threading a captureError() call through `resolveIdentity` or every
+ * route individually. `event.platform?.env?.SENTRY_DSN` is undefined until
+ * `wrangler secret put SENTRY_DSN` is run (see src/lib/server/observability.ts
+ * for what happens either way); `event.platform` itself can be undefined in
+ * `vite dev` without the Cloudflare plugin, same guard as `resolveIdentity`.
+ */
+export const handleError: HandleServerError = ({ error, event, status }) => {
+	// SvelteKit already logs expected errors (4xx from `error()`) without
+	// calling this hook for most of them, but a thrown 4xx from a `load`
+	// still lands here — only forward genuine 5xx-class failures to Sentry so
+	// it doesn't fill up with routine "not found" traffic.
+	if (status < 500) return;
+
+	captureError(event.platform?.env?.SENTRY_DSN, error, {
+		source: 'hooks.handleError',
+		route: event.route?.id ?? event.url.pathname
+	});
 };
 
 export const handle: Handle = ({ event, resolve }) =>
