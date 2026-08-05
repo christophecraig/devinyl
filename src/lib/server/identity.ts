@@ -61,6 +61,14 @@ export async function loadIsOperator(db: Db, player: Player): Promise<boolean> {
 	return row?.isOperator ?? false;
 }
 
+/** Resolve an operator account for a `/admin`-gated route, or 403 (task 2.9). */
+export async function requireOperator(db: Db, locals: App.Locals): Promise<string> {
+	const userId = requireUserId(locals);
+	const isOperator = await loadIsOperator(db, { kind: 'user', userId, guestId: null });
+	if (!isOperator) apiError('forbidden', 'Operator access required.');
+	return userId;
+}
+
 /**
  * Validate a nickname at a **write** point (FAIR-5: at every point a name is
  * set, never on read). Returns the trimmed name.

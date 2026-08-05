@@ -261,6 +261,26 @@ export const importGuestSchema = z.object({
 export const dailyRoundCountSchema = z.literal(DAILY_ROUNDS);
 
 // ---------------------------------------------------------------------------
+// Operator (§15, plan task 2.9)
+// ---------------------------------------------------------------------------
+
+/** CREATE-8/LOC-3: publishing a quiz as official requires a localized name in both languages. */
+export const publishOfficialSchema = z.object({
+	nameFr: quizNameSchema,
+	nameEn: quizNameSchema,
+	descriptionFr: quizDescriptionSchema.nullish(),
+	descriptionEn: quizDescriptionSchema.nullish()
+});
+
+const parisDaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD');
+
+/** CREATE-9: assigns an already-official quiz to a calendar day. */
+export const scheduleDailySchema = z.object({
+	day: parisDaySchema,
+	quizId: idSchema
+});
+
+// ---------------------------------------------------------------------------
 // Inferred types — the wire contract, derived from the schemas rather than
 // declared twice.
 // ---------------------------------------------------------------------------
@@ -272,4 +292,6 @@ export type CreateSessionBody = z.infer<typeof createSessionSchema>;
 export type RoundResultBody = z.infer<typeof roundResultSchema>;
 export type FinalizeSessionBody = z.infer<typeof finalizeSessionSchema>;
 export type ImportGuestBody = z.infer<typeof importGuestSchema>;
+export type PublishOfficialBody = z.infer<typeof publishOfficialSchema>;
+export type ScheduleDailyBody = z.infer<typeof scheduleDailySchema>;
 export type BoardQuery = z.infer<typeof boardQuerySchema>;

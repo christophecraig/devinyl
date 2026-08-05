@@ -27,6 +27,21 @@ export function parisDay(now: number = Date.now()): string {
 	return dayFormatter.format(new Date(now));
 }
 
+/**
+ * The Paris calendar day `offsetDays` after `now` (negative goes backward) —
+ * the daily-calendar gap-warning scan (task 2.9, CREATE-9) walks this
+ * forward from today. Arithmetic on the formatted `YYYY-MM-DD` string's UTC
+ * midnight is exact for calendar-day stepping even though it ignores Paris's
+ * own DST shifts, because a day boundary is still a day boundary either side
+ * of one.
+ */
+export function parisDayOffset(now: number, offsetDays: number): string {
+	const [year, month, day] = parisDay(now).split('-').map(Number);
+	const date = new Date(Date.UTC(year, month - 1, day));
+	date.setUTCDate(date.getUTCDate() + offsetDays);
+	return date.toISOString().slice(0, 10);
+}
+
 const partsFormatter = new Intl.DateTimeFormat('en-CA', {
 	timeZone: PARIS,
 	year: 'numeric',
