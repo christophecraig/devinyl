@@ -64,6 +64,14 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
+      - name: Generate Paraglide messages
+        # svelte-check (part of `check`, below) reads $lib/paraglide/messages.js
+        # straight off disk — unlike Vitest/`vite build`, it doesn't go through
+        # Vite's transform pipeline, so paraglideVitePlugin (vite.config.ts)
+        # never runs for it. The directory is gitignored (generated), so a
+        # fresh checkout has nothing there until this runs explicitly.
+        run: pnpm exec paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide --strategy cookie preferredLanguage baseLocale --silent
+
       - name: Typecheck
         run: pnpm run check
 
