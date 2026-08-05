@@ -17,10 +17,17 @@
 	import { resolve } from '$app/paths';
 
 	let { children } = $props();
+
+	// PWA (task 3.12): SvelteKit auto-registers `src/service-worker.ts` (the
+	// default `kit.serviceWorker.register: true` — no svelte.config.js here to
+	// override it) — see that file's own doc for what it does and, more to the
+	// point, what it deliberately doesn't touch (Deezer audio, API responses).
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<link rel="manifest" href="/manifest.webmanifest" />
+	<meta name="theme-color" content="#c45d3a" />
 </svelte:head>
 
 <div class="shell">
