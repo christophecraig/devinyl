@@ -223,7 +223,18 @@ export function createAuth(db: Db, env: AuthEnv) {
 
 		user: {
 			additionalFields: {
-				displayName: { type: 'string', required: true, input: true },
+				// Not `required: true`: Better Auth enforces framework-level
+				// "required" fields on the raw OAuth provider profile *before*
+				// `create.before` below ever runs (see
+				// `parseAdditionalUserInputFromProviderProfile` in
+				// better-auth/oauth2/link-account.mjs) — Google's profile has no
+				// `displayName` claim, so a `required: true` here throws
+				// "displayName is required" on every Google sign-up before
+				// `deriveOAuthDisplayName` gets a chance to bootstrap one. The
+				// credential path's own requirement is enforced by
+				// `create.before`'s `validateDisplayName` below regardless of
+				// this flag (same reasoning as `birthYear` just below).
+				displayName: { type: 'string', required: false, input: true },
 				displayNameNormalized: { type: 'string', required: false, input: false },
 				avatarUrl: { type: 'string', required: false, input: true },
 				locale: { type: 'string', required: false, input: true, defaultValue: 'fr' },

@@ -11,6 +11,7 @@
 
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
+import { parseAdditionalUserInputFromProviderProfile } from 'better-auth/db';
 import { createAuth } from './auth.js';
 import { user } from './db/schema.js';
 import { ensureMigrations, resetDb, testDb } from './test-utils.integration.js';
@@ -178,5 +179,49 @@ describe('Better Auth (task 2.2)', () => {
 
 		const [row] = await db.select().from(user).where(eq(user.email, 'complete@example.test'));
 		expect(row.birthYear).toBe(new Date().getUTCFullYear() - 20);
+	});
+
+	/**
+	 * Regression for the framework-level gap the manual-verification note
+	 * above didn't catch: Better Auth validates `additionalFields.required`
+	 * against the raw OAuth provider profile in
+	 * `parseAdditionalUserInputFromProviderProfile` (better-auth's own
+	 * oauth2/link-account.mjs, called before `create.before` ever runs).
+	 * Google's userinfo response has no `displayName` claim, so a
+	 * `required: true` on that field throws "displayName is required" on
+	 * every real Google sign-up — `deriveOAuthDisplayName` in `create.before`
+	 * never gets a chance to bootstrap one. This reproduces the exact call
+	 * Better Auth's real `/callback/google` handler makes, without needing a
+	 * mocked token/userinfo exchange.
+	 */
+	it('bootstraps a displayName for an OAuth profile with no displayName claim (Google sign-up)', async () => {
+		const auth = createAuth(db, AUTH_ENV);
+		const { internalAdapter, options } = await auth.$context;
+
+		const providerProfile = { locale: 'fr' };
+		const additionalUserFields = parseAdditionalUserInputFromProviderProfile(
+			options,
+			providerProfile,
+			'create'
+		);
+
+		await internalAdapter.createOAuthUser(
+			{
+				name: 'Jamie Rivera',
+				image: null,
+				...additionalUserFields,
+				email: 'jamie@example.test',
+				emailVerified: true
+			},
+			{
+				accessToken: 'test-token',
+				providerId: 'google',
+				accountId: 'google-subject-id'
+			}
+		);
+
+		const [row] = await db.select().from(user).where(eq(user.email, 'jamie@example.test'));
+		expect(row.displayName).toBeTruthy();
+		expect(row.birthYear).toBeNull();
 	});
 });
