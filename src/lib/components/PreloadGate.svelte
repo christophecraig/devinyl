@@ -30,9 +30,11 @@
 		estimate: PreloadEstimate;
 		progress: PreloadProgress | null;
 		onStart: () => void;
+		/** A11Y-5/§9: true when this session resolved to the fixed-scoring (untimed) board — told here, before the player commits to playing. */
+		untimedBoard?: boolean;
 	}
 
-	let { phase, roundCount, estimate, progress, onStart }: Props = $props();
+	let { phase, roundCount, estimate, progress, onStart, untimedBoard = false }: Props = $props();
 
 	function formatMb(bytes: number): string {
 		return (bytes / (1024 * 1024)).toFixed(1);
@@ -83,6 +85,12 @@
 			<li>Wrong guesses cost you nothing but time.</li>
 		</ul>
 
+		{#if untimedBoard}
+			<p class="notice">
+				You're playing on the <strong>untimed board</strong> — speed doesn't affect your score, only
+				getting the answer right.
+			</p>
+		{/if}
 		{#if phase === 'confirm'}
 			<p class="notice">
 				This quiz is large or your connection looks slow: about {formatMb(estimate.bytes)} MB, roughly

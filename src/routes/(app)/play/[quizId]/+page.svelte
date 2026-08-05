@@ -467,6 +467,7 @@
 			estimate={estimatePreload(manifest.rounds.length)}
 			progress={preloadProgress}
 			onStart={handleStartTap}
+			untimedBoard={manifest.effectiveScoringMode === 'fixed'}
 		/>
 	{:else if game.phase === 'countdown'}
 		<section bind:this={phaseSectionEl} tabindex="-1" class="countdown">
