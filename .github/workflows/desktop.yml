@@ -1,0 +1,77 @@
+# Plan task 4.9: wraps the deployed web app (§ tauri.conf.json's window `url`,
+# not a local build — this app is server-rendered on Workers/D1, there is no
+# static frontend to bundle) in a native Tauri v2 shell and builds installers
+# for Windows/Linux/macOS on GitHub's free runners (no Mac owned, per the
+# deviation table — macOS build is unsigned/unnotarized, §G-13).
+#
+# Manual trigger (workflow_dispatch) for on-demand builds, plus `v*` tags for
+# real releases: tauri-action creates a draft GitHub Release and attaches each
+# platform's installer to it. Auto-update is deliberately not wired (plan says
+# "auto-update deferred").
+
+name: Desktop build
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build and attach installers to (e.g. v0.1.0-test)'
+        required: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+          - platform: ubuntu-latest
+          - platform: macos-latest
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Linux webview/build dependencies
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        run: echo "name=${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # tauri.conf.json's window loads the deployed production URL
+          # directly; no `tauri dev`/local build step is needed here.
+          tagName: ${{ steps.tag.outputs.name }}
+          releaseName: Devinyl Desktop ${{ steps.tag.outputs.name }}
+          releaseBody: 'Native desktop shell for https://devinyl.restless-mode-79fb.workers.dev. Unsigned on macOS (§G-13) — Gatekeeper will warn on first launch.'
+          releaseDraft: true
+          prerelease: false

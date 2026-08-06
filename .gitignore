@@ -44,3 +44,7 @@ test-results
 # Editor swap files
 *.swp
 *.swo
+
+# Tauri desktop shell (task 4.9) — Rust build output, mobile scaffolding
+/src-tauri/target/
+/src-tauri/gen/

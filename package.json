@@ -18,7 +18,8 @@
 		"test:integration": "vitest run --config vitest.integration.config.ts",
 		"test": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate:local": "wrangler d1 migrations apply DB --local"
+		"db:migrate:local": "wrangler d1 migrations apply DB --local",
+		"tauri": "tauri"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.12.1",
@@ -31,6 +32,7 @@
 		"@sveltejs/adapter-cloudflare": "^7.2.8",
 		"@sveltejs/kit": "^2.63.0",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"@tauri-apps/cli": "^2.11.4",
 		"@types/node": "^24",
 		"drizzle-kit": "^0.31.10",
 		"drizzle-orm": "^0.45.2",
@@ -50,6 +52,7 @@
 		"wrangler": "^4.97.0"
 	},
 	"dependencies": {
+		"@tauri-apps/api": "^2.11.1",
 		"better-auth": "^1.6.26",
 		"zod": "^4.4.3"
 	}

@@ -10,3 +10,8 @@ bun.lockb
 
 # drizzle-kit generated migration metadata (not hand-authored)
 /drizzle/meta/
+
+# Tauri desktop shell (task 4.9): Rust build output + generated capability
+# manifests, not source
+/src-tauri/target/
+/src-tauri/gen/

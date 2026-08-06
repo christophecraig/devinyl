@@ -1,0 +1,41 @@
+{
+	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+	"productName": "Devinyl",
+	"version": "0.1.0",
+	"identifier": "app.devinyl.desktop",
+	"build": {
+		"frontendDist": "./shell"
+	},
+	"app": {
+		"windows": [
+			{
+				"label": "main",
+				"title": "Devinyl",
+				"url": "https://devinyl.restless-mode-79fb.workers.dev",
+				"width": 1100,
+				"height": 800,
+				"minWidth": 480,
+				"minHeight": 600,
+				"resizable": true,
+				"fullscreen": false
+			}
+		],
+		"security": {
+			"csp": null
+		}
+	},
+	"bundle": {
+		"active": true,
+		"targets": "all",
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		],
+		"publisher": "Devinyl",
+		"shortDescription": "A French-repertoire music blind test.",
+		"longDescription": "Devinyl is a French-repertoire music blind test: guess the title and artist from a short clip, race the clock, and climb daily and weekly boards."
+	}
+}
