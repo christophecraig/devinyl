@@ -78,11 +78,17 @@ jobs:
       - name: Unit tests
         run: pnpm run test:unit
 
+      - name: Build
+        # Must run before the integration suite below: those tests boot the
+        # real Workers runtime via worker/entry.ts, which imports
+        # .svelte-kit/cloudflare/_worker.js — the artifact adapter-cloudflare
+        # only writes here, during `vite build`. Unit tests don't need it
+        # (plain node/jsdom, no adapter output involved), so they stay ahead
+        # of Build; this step can't move ahead of them.
+        run: pnpm run build
+
       - name: Integration tests (local D1 via vitest-pool-workers)
         run: pnpm run test:integration
-
-      - name: Build
-        run: pnpm run build
 
       - name: 'Bundle-size budget (§4: initial JS < 60 KB gzip, landing/play route)'
         run: node scripts/check-bundle-size.mjs
