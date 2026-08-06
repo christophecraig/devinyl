@@ -2,9 +2,11 @@
 	/**
 	 * Nickname prompt — technical-spec §4 "Guest identity" (ACC-1), FAIR-5.
 	 *
-	 * Shape-only client validation (length + characters, mirroring
-	 * `$lib/game/schemas.ts`'s `nicknameSchema`), the same "client validates for
-	 * instant feedback, server is the authority" split §7.2 uses for guesses.
+	 * Shape-only client validation (length + characters, hand-rolled in
+	 * `$lib/client/validate.ts` to mirror `$lib/game/schemas.ts`'s
+	 * `nicknameSchema` without pulling zod into the client bundle), the same
+	 * "client validates for instant feedback, server is the authority" split
+	 * §7.2 uses for guesses.
 	 * Profanity (FAIR-5) is deliberately *not* checked here: the curated lists
 	 * live in `src/lib/server/profanity.ts` and only run server-side, at the
 	 * point a nickname is actually set (`POST /api/sessions`, challenge join) —
@@ -13,7 +15,7 @@
 	 * caller (the API error path), not from this component.
 	 */
 	import { untrack } from 'svelte';
-	import { nicknameSchema } from '$lib/game/schemas.js';
+	import { validateNickname } from '$lib/client/validate.js';
 	import { m } from '$lib/paraglide/messages.js';
 
 	let { initial = '', onsubmit }: { initial?: string; onsubmit: (name: string) => void } = $props();
@@ -28,13 +30,13 @@
 	const ERROR_ID = 'nickname-prompt-error';
 
 	function validate(name: string): string | null {
-		const parsed = nicknameSchema.safeParse(name);
+		const parsed = validateNickname(name);
 		return parsed.success ? null : m.nickname_error();
 	}
 
 	function handleSubmit(event: SubmitEvent): void {
 		event.preventDefault();
-		const result = nicknameSchema.safeParse(value);
+		const result = validateNickname(value);
 		if (!result.success) {
 			error = validate(value);
 			return;

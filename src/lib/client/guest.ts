@@ -16,8 +16,7 @@
  * page lifetime rather than breaking play.
  */
 
-import { z } from 'zod';
-import { guestIdSchema, idSchema, nicknameSchema } from '../game/schemas.js';
+import { isGuestId, isId, isNonNegInt, validateNickname } from './validate.js';
 
 // ---------------------------------------------------------------------------
 // Public shape
@@ -50,23 +49,51 @@ const MAX_HISTORY = 50;
 const STORAGE_KEY = 'devinyl:guest:v1';
 const SCHEMA_VERSION = 1;
 
-const historyEntrySchema = z.object({
-	sessionId: idSchema,
-	quizId: idSchema,
-	score: z.number().int().min(0),
-	playedAt: z.number().int().min(0)
-});
+function parseHistoryEntry(value: unknown): GuestHistoryEntry | null {
+	if (typeof value !== 'object' || value === null) return null;
+	const { sessionId, quizId, score, playedAt } = value as Record<string, unknown>;
+	if (!isId(sessionId) || !isId(quizId)) return null;
+	if (!isNonNegInt(score) || !isNonNegInt(playedAt)) return null;
+	return { sessionId, quizId, score, playedAt };
+}
 
-const storedGuestSchema = z.object({
-	schemaVersion: z.literal(SCHEMA_VERSION),
-	guestId: guestIdSchema,
-	nickname: nicknameSchema.nullable(),
-	history: z.array(historyEntrySchema),
-	dailyStreak: z.object({
-		count: z.number().int().min(0),
-		lastDay: z.string().nullable()
-	})
-});
+function parseStoredGuest(value: unknown): GuestIdentity | null {
+	if (typeof value !== 'object' || value === null) return null;
+	const v = value as Record<string, unknown>;
+	if (v.schemaVersion !== SCHEMA_VERSION) return null;
+	if (!isGuestId(v.guestId)) return null;
+
+	let nickname: string | null;
+	if (v.nickname === null) {
+		nickname = null;
+	} else if (typeof v.nickname === 'string') {
+		const result = validateNickname(v.nickname);
+		if (!result.success) return null;
+		nickname = result.data;
+	} else {
+		return null;
+	}
+
+	if (!Array.isArray(v.history)) return null;
+	const history: GuestHistoryEntry[] = [];
+	for (const item of v.history) {
+		const entry = parseHistoryEntry(item);
+		if (!entry) return null;
+		history.push(entry);
+	}
+
+	if (typeof v.dailyStreak !== 'object' || v.dailyStreak === null) return null;
+	const ds = v.dailyStreak as Record<string, unknown>;
+	if (!isNonNegInt(ds.count)) return null;
+	if (ds.lastDay !== null && typeof ds.lastDay !== 'string') return null;
+
+	return {
+		guestId: v.guestId,
+		nickname,
+		history,
+		dailyStreak: { count: ds.count, lastDay: ds.lastDay as string | null }
+	};
+}
 
 /** Minimal `localStorage` surface, mirroring `preloader.ts`'s `StorageLike` — lets tests stub it. */
 interface StorageLike {
@@ -133,12 +160,11 @@ function readFromStorage(): GuestIdentity | null {
 	const raw = storage.getItem(STORAGE_KEY);
 	if (!raw) return null;
 	try {
-		const parsed = storedGuestSchema.parse(JSON.parse(raw));
-		const { schemaVersion: _schemaVersion, ...identity } = parsed;
-		return identity;
+		return parseStoredGuest(JSON.parse(raw));
 	} catch {
-		// Corrupt JSON, or a shape this build doesn't recognize — never throw,
-		// just start fresh (comment above on `STORAGE_KEY`).
+		// Corrupt JSON — never throw, just start fresh (comment above on
+		// `STORAGE_KEY`). An unrecognized shape returns `null` from
+		// `parseStoredGuest` itself, without throwing.
 		return null;
 	}
 }
