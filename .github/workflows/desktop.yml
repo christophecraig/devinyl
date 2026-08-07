@@ -30,6 +30,10 @@ jobs:
           - platform: ubuntu-latest
           - platform: macos-latest
     runs-on: ${{ matrix.platform }}
+    permissions:
+      # Repo's default GITHUB_TOKEN permission is "read" — tauri-action needs
+      # to create/update a draft release and upload assets to it.
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
