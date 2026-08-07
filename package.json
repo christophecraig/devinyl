@@ -55,14 +55,5 @@
 		"@tauri-apps/api": "^2.11.1",
 		"better-auth": "^1.6.26",
 		"zod": "^4.4.3"
-	},
-	"pnpm": {
-		"overrides": {
-			"cookie": ">=0.7.0",
-			"undici": ">=7.29.0",
-			"esbuild": ">=0.25.0",
-			"tmp": ">=0.2.6",
-			"uuid": ">=11.1.1"
-		}
 	}
 }
