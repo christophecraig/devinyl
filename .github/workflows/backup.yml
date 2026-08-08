@@ -1,0 +1,97 @@
+# Plan task 4.7 (automation half — the live Time Travel restore drill is run
+# separately, by hand, and logged in docs/runbooks/restore.md's Drill log).
+#
+# Scheduled `wrangler d1 export` snapshots of the remote `devinyl` D1 database,
+# kept as two independent copies:
+#   1. R2 bucket `devinyl-backups` (bucket already created; free tier, 10 GB —
+#      see the "No pruning" note below).
+#   2. A GitHub Actions artifact (~30-day retention) attached to this
+#      workflow's own run.
+#
+# One-time setup caveat: CLOUDFLARE_API_TOKEN (the same repo secret ci.yml's
+# `deploy` job uses) was originally scoped for Workers+D1 only. If the R2
+# upload step below fails with a permissions/authorization error, the fix is
+# a one-time dashboard edit: add the "Workers R2 Storage: Edit" permission to
+# that token (Cloudflare dashboard → Manage Account → API Tokens). Until that
+# is done, the R2 step is expected to fail — `continue-on-error: true` lets
+# the job carry on to the artifact-upload step regardless, so the artifact
+# copy is never lost even while R2 is unreachable. The final "R2 upload
+# result" step then re-fails the job if R2 didn't succeed, so the gap stays
+# visible in the Actions tab instead of going quiet.
+#
+# No automatic pruning of old R2 objects: this DB is tiny (a blind-test quiz
+# app's rows, not user-uploaded media) next to R2's 10 GB free tier. Revisit
+# if/when that stops being true.
+
+name: Backup (D1 snapshot)
+
+on:
+  schedule:
+    # 03:17 UTC daily — off-peak, and clear of the 00:05 UTC daily cron
+    # (wrangler.jsonc's `triggers.crons`) and the */15 and hourly Cron
+    # Triggers, none of which land on :17.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: backup-devinyl
+  cancel-in-progress: false
+
+env:
+  WRANGLER_SEND_METRICS: 'false'
+
+jobs:
+  backup:
+    name: export devinyl (D1 -> R2 + artifact)
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Compute snapshot filename
+        id: snapshot
+        run: echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Export devinyl (remote D1 -> SQL)
+        run: pnpm exec wrangler d1 export devinyl --remote --output devinyl-${{ steps.snapshot.outputs.date }}.sql
+
+      - name: Gzip snapshot
+        run: gzip devinyl-${{ steps.snapshot.outputs.date }}.sql
+
+      - name: Upload snapshot to R2 (devinyl-backups)
+        id: r2_upload
+        continue-on-error: true
+        run: pnpm exec wrangler r2 object put devinyl-backups/devinyl-${{ steps.snapshot.outputs.date }}.sql.gz --file devinyl-${{ steps.snapshot.outputs.date }}.sql.gz --remote
+
+      - name: Upload snapshot as workflow artifact (independent copy)
+        uses: actions/upload-artifact@v4
+        with:
+          name: devinyl-backup-${{ steps.snapshot.outputs.date }}
+          path: devinyl-${{ steps.snapshot.outputs.date }}.sql.gz
+          retention-days: 30
+
+      - name: R2 upload result
+        # The artifact copy above always runs and is never at risk. This step
+        # only makes an R2 failure loud instead of silent — see the header
+        # comment for the one-time API-token permission fix.
+        if: steps.r2_upload.outcome == 'failure'
+        run: |
+          echo "::error::wrangler r2 object put failed — see the header comment in .github/workflows/backup.yml for the one-time API token permission fix (add 'Workers R2 Storage: Edit'). The GitHub Actions artifact copy of this snapshot still succeeded."
+          exit 1
