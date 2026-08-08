@@ -16,7 +16,12 @@
 #     representative of anything. Deferred to task 4.14 (launch checklist).
 #   - Lighthouse's "Fast 3G" throttling is simulated (lighthouserc.cjs),
 #     not a real mobile network — also called out there.
-#   - No PR preview-deploy job — a preview environment/DB isn't set up yet.
+#
+# `deploy-preview` runs only on pull requests from branches in THIS repo
+# (forks get no secrets), after build-and-test passes: migrates the throwaway
+# `devinyl-preview` D1 database, deploys the `preview` environment from
+# wrangler.jsonc as a separate Worker, and posts/updates a single PR comment
+# with the URL. All PRs share that one Worker and database — last push wins.
 
 name: CI
 
@@ -159,7 +164,107 @@ jobs:
         run: pnpm run build
 
       - name: Apply pending D1 migrations (remote)
-        run: pnpm exec wrangler d1 migrations apply devinyl --remote
+        # `--env=""` explicitly targets wrangler.jsonc's TOP-LEVEL config. Once
+        # any `env.*` block exists (the `preview` one does), wrangler warns on a
+        # bare invocation and asks for the target to be named — say it, rather
+        # than let a future second environment turn this into a coin flip about
+        # which database production CI migrates.
+        run: pnpm exec wrangler d1 migrations apply devinyl --remote --env=""
 
       - name: Deploy Worker
-        run: pnpm exec wrangler deploy
+        run: pnpm exec wrangler deploy --env=""
+
+  deploy-preview:
+    name: deploy preview (devinyl-preview)
+    needs: build-and-test
+    # Pull requests only, and only from branches pushed to this repository:
+    # `pull_request` from a fork runs without access to secrets, so
+    # CLOUDFLARE_API_TOKEN would be empty and every wrangler step would fail
+    # with an auth error on every external contribution. Skip instead.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    concurrency:
+      # Serialized against itself, not cancelled: two PRs deploying at once
+      # would race on the same Worker and the same D1 database (see the
+      # `env.preview` comment in wrangler.jsonc — last push wins, by design),
+      # and a cancelled `d1 migrations apply` is worse than a slow queue.
+      group: deploy-devinyl-preview
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      # For the preview-URL comment below.
+      pull-requests: write
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      PREVIEW_URL: https://devinyl-preview.restless-mode-79fb.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Local-dev secrets
+        # Same as the other jobs: `wrangler types` (part of `pnpm build`) needs
+        # values to introspect. The preview Worker's actual runtime values come
+        # from wrangler.jsonc's `env.preview.vars` — the one place committed
+        # placeholder "secrets" are intentional, because the environment and its
+        # database are both throwaway. See that file's comment.
+        run: cp .dev.vars.example .dev.vars
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Apply pending D1 migrations (remote, preview DB)
+        # Migrations before code, same ordering rule as production.
+        run: pnpm exec wrangler d1 migrations apply devinyl-preview --remote --env preview
+
+      - name: Deploy preview Worker
+        run: pnpm exec wrangler deploy --env preview
+
+      - name: Comment preview URL on the PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Idempotent: find this job's own comment by the HTML marker and
+            // edit it, so a PR with twenty pushes still has exactly one
+            // preview comment showing the latest deploy.
+            const MARKER = '<!-- devinyl-preview-url -->';
+            const body = [
+              MARKER,
+              '### Preview deploy',
+              '',
+              `**${process.env.PREVIEW_URL}**`,
+              '',
+              `Deployed from \`${context.sha.slice(0, 7)}\` at ${new Date().toISOString()}.`,
+              '',
+              'Heads up: every PR shares this one preview Worker and its `devinyl-preview`',
+              'D1 database — the most recent push to any open PR is what is live here.',
+              'Placeholder auth/IP-hash secrets, no Google OAuth, no Resend, no Sentry.'
+            ].join('\n');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(MARKER));
+
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

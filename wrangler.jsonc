@@ -63,5 +63,83 @@
 			// pinned to Paris midnight rather than "some time overnight UTC".
 			"5 0 * * *"
 		]
+	},
+	"env": {
+		// PR preview environment (plan S.6). `wrangler deploy --env preview`
+		// deploys a SEPARATE Worker — wrangler names named environments
+		// `<top-level name>-<env name>`, i.e. `devinyl-preview` — reachable at
+		// https://devinyl-preview.restless-mode-79fb.workers.dev.
+		//
+		// All PRs share this one Worker and this one database: the preview
+		// deploy is last-push-wins across concurrent PRs. That is a deliberate
+		// trade for a single-developer repo (one throwaway DB to keep migrated,
+		// one URL to remember) and would need per-PR envs/databases the moment
+		// two PRs are ever in review at once.
+		//
+		// Inheritance (Wrangler config reference): `assets`, `workers_dev`,
+		// `preview_urls` and `triggers` are INHERITABLE and would carry over
+		// from the top level; bindings (`d1_databases`) and `vars` are NOT and
+		// must be restated here. `assets` is restated anyway so this block reads
+		// as the whole environment rather than a diff.
+		"preview": {
+			"workers_dev": true,
+			"preview_urls": true,
+			"assets": {
+				"binding": "ASSETS",
+				"directory": ".svelte-kit/cloudflare"
+			},
+			// Not inherited — bindings must be redefined per environment.
+			// Separate throwaway database (`devinyl-preview`); production's
+			// `devinyl` DB is never touched by a preview deploy.
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "devinyl-preview",
+					"database_id": "7751bdbd-8e9e-47c3-ad8a-4369b96c521b",
+					"migrations_dir": "drizzle"
+				}
+			],
+			// `triggers` IS inherited, so the three production Cron Triggers
+			// would otherwise also fire on the preview Worker — sweeping and
+			// deleting rows in the preview DB on every 15-minute tick, and
+			// doubling the account's cron invocations for no reason. Emptied
+			// explicitly: preview runs no scheduled work.
+			"triggers": {
+				"crons": []
+			},
+			// DELIBERATE EXCEPTION to the no-`vars` rule above, and only here.
+			// The reason that rule exists — a committed var clobbers the remote
+			// secret of the same name on deploy — is precisely what makes this
+			// safe: there is no real secret on the preview Worker to clobber.
+			// These are the same public placeholder values .dev.vars.example
+			// documents; the preview DB is throwaway, so an invertible IP hash
+			// or a guessable session-signing key there costs nothing, and
+			// wiring `wrangler secret put` per environment for a disposable
+			// review deploy is not worth the operational surface.
+			//
+			// NEVER copy this block up to the top level. Production's values
+			// stay in `wrangler secret` (see the long note above).
+			//
+			// GOOGLE_CLIENT_ID/SECRET, RESEND_API_KEY, SENTRY_DSN and
+			// HEALTHCHECKS_URL are functionally unset — declared as EMPTY
+			// strings, which every consumer treats as absent (Google OAuth
+			// unregistered, emails logged instead of sent, errors
+			// console.error'd only, no cron liveness ping; see
+			// .dev.vars.example). They are declared at all because `wrangler
+			// types` generates `Env` per environment: a key missing from this
+			// block would go missing/optional in the generated type for the
+			// whole codebase, breaking `pnpm run check` — the preview env must
+			// stay type-shape-identical to production's secret set.
+			"vars": {
+				"IP_HASH_SECRET": "dev-placeholder-not-a-secret",
+				"BETTER_AUTH_SECRET": "dev-placeholder-not-a-secret-32-bytes-min",
+				"BETTER_AUTH_URL": "https://devinyl-preview.restless-mode-79fb.workers.dev",
+				"GOOGLE_CLIENT_ID": "",
+				"GOOGLE_CLIENT_SECRET": "",
+				"RESEND_API_KEY": "",
+				"SENTRY_DSN": "",
+				"HEALTHCHECKS_URL": ""
+			}
+		}
 	}
 }
