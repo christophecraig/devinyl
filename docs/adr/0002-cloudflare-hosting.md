@@ -77,6 +77,16 @@ These are orders of magnitude above what a friends-POC needs (implementation-pla
 
 ---
 
+## Addendum (2026-08-07): plan 4.10 resolved — dynamic OG images stay deferred
+
+Task 4.10 made the satori decision conditional on measured CPU numbers. They now exist: a representative Devinyl share card (1200×630, three text lines, one bold TTF) rendered through the exact pipeline 4.10 proposed measures **~54 ms CPU per card — satori (JSX→SVG) ~9 ms, resvg (SVG→PNG) ~45 ms** — averaged over 10 warm renders (font parse and module init excluded) on a desktop-class x86 CPU, i.e. a _favourable_ environment: the measurement used `@resvg/resvg-js` (native), while Workers would run `@resvg/resvg-wasm`, which is slower, on shared-tenant CPU.
+
+That is **5× over the free tier's 10 ms cap**, and the cap applies to _every_ Worker invocation — including the "pre-render at creation time into R2/KV" variant, whose rendering still happens inside a Worker request (creation, cron, or queue consumer are all capped the same on the free tier). There is no free-tier invocation context in which this pipeline fits.
+
+**Decision:** keep the static branded OG image + dynamic `og:title`/`og:description` text (row 8's POC posture) as the V1-launch posture too. SHARE-4 remains honored. Revisit only alongside the already-scheduled Workers-Paid decision (plan 4.14 / "Revisit when" below): the $5/mo plan's 30 s CPU limit fits ~54 ms trivially, at which point pre-rendering at creation time into KV/R2 is the right shape.
+
+---
+
 ## Revisit when
 
 - **Free-tier limits are approached** (D1 reads/writes, Workers requests/day, or the 10 ms CPU cap becomes a recurring source of failed requests rather than a satori-specific edge case).

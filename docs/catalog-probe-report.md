@@ -209,3 +209,27 @@ Genre is the weaker of the two fields, but only marginally, and only on a narrow
 - Two follow-ups for Phase 1: (a) genre-empty-album fallback/["unknown" bucket] handling in the catalog client (§3.3); (b) keep clip-preload concurrency modest given the CDN's own independent rate limiting observed here (§6).
 
 No changes to the Deezer-vs-iTunes-fallback decision (§19) are warranted — this run gives no reason to open that door.
+
+---
+
+## 9. Re-run log (§17 drift detection)
+
+The probe is not a one-off Gate-0 artifact — §17 wants it re-run to catch catalog
+drift, and `.github/workflows/weekly-probe.yml` (plan S.6) now runs it every Sunday
+and **fails the workflow below the 95 % bar**, so GitHub's scheduled-workflow
+failure email is the alert channel. Manual re-runs land here.
+
+| Run date   | Combined pass      | Found       | Preview OK  | Hydration    | Artist | CORS  | Verdict                                       |
+| ---------- | ------------------ | ----------- | ----------- | ------------ | ------ | ----- | --------------------------------------------- |
+| 2026-08-03 | **97.6 %** (83/85) | 85/85 100 % | 85/85 100 % | 83/85 97.6 % | 10/10  | 10/10 | Gate 0 baseline (§1–§8 above)                 |
+| 2026-08-07 | **97.6 %** (83/85) | 85/85 100 % | 85/85 100 % | 83/85 97.6 % | 10/10  | 10/10 | **No drift.** Plan 4.14's "probe re-run" item |
+
+The 2026-08-07 re-run reproduced the baseline exactly, sub-rate for sub-rate: the
+same two hydration failures (empty `genres` on the Piaf and France Gall reissue
+albums — a metadata gap, not a coverage gap), preview durations still a uniform
+479 827 B ≈ 30 s across the sample, and `access-control-allow-origin` present on
+10/10 preview responses. One transient 429 on a CDN preview fetch was absorbed by
+the script's own backoff-and-retry, which is the CDN rate limiting §6 already
+documents rather than a new signal.
+
+Nothing here reopens §8's recommendation.
