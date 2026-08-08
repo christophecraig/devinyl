@@ -4,6 +4,11 @@ export default defineConfig({
 	testDir: 'e2e',
 	testMatch: '**/*.e2e.{ts,js}',
 	webServer: { command: 'pnpm run build && pnpm run preview', port: 4173 },
+	// `preview` is `wrangler dev` over a REAL local D1 (`.wrangler/state/v3/d1`),
+	// so `(share)/c/[token]` — which reads the challenge during SSR and is
+	// therefore unreachable by `page.route` — can be covered by seeding that
+	// database instead of mocking it. See `e2e/global-setup.ts`.
+	globalSetup: './e2e/global-setup.ts',
 	// CI (ci.yml, plan task 4.3) uploads `playwright-report/` as a build
 	// artifact on failure — the default reporter never writes that
 	// directory, so CI needs `html` explicitly. Locally, `list` is quieter.
