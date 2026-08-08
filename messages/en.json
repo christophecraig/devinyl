@@ -1,6 +1,5 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-
 	"nav_primary_label": "Primary",
 	"nav_daily": "Daily",
 	"nav_stats": "Stats",
@@ -8,7 +7,8 @@
 	"nav_sign_in": "Sign in",
 	"nav_language_label": "Language",
 	"footer_tagline": "Devinyl — a French-repertoire music blind test.",
-
+	"footer_terms": "Terms of service",
+	"footer_privacy": "Privacy policy",
 	"home_eyebrow": "French repertoire · Blind test",
 	"home_h1_line1": "Name the track",
 	"home_h1_line2": "before the clip runs out.",
@@ -40,7 +40,6 @@
 	"home_error_network": "Network error.",
 	"home_button_generating": "Generating…",
 	"home_button_generate": "Generate quiz",
-
 	"api_error_bad_request": "That request didn't look right — double-check the form and try again.",
 	"api_error_unauthorized": "Sign in to do that.",
 	"api_error_forbidden": "You don't have permission to do that.",
@@ -51,11 +50,9 @@
 	"api_error_unavailable": "That's not available right now — try different filters.",
 	"api_error_network": "Network error — check your connection and try again.",
 	"api_error_internal": "Something went wrong. Please try again.",
-
 	"nickname_label": "Nickname",
 	"nickname_error": "Pick a nickname between 2 and 24 characters (letters, numbers, spaces, - . ' only).",
 	"nickname_continue": "Continue",
-
 	"share_daily_text": "Devinyl #{day} — {score} pts",
 	"share_challenge_text": "{name} scored {score} pts on Devinyl. Beat it?",
 	"daily_share_button": "Share result",
@@ -65,14 +62,12 @@
 	"challenge_share_retry": "Retry",
 	"challenge_share_link_button": "Share challenge link",
 	"challenge_share_link_label": "Challenge link",
-
 	"common_retry": "Retry",
 	"common_continue": "Continue",
 	"common_dismiss": "Dismiss",
 	"common_label_title": "Title",
 	"common_label_artist": "Artist",
 	"common_loading": "Loading…",
-
 	"play_session_error_heading": "Couldn't start this quiz",
 	"play_preparing": "Preparing your quiz…",
 	"play_round_heading": "Round {index} of {total}",
@@ -95,7 +90,6 @@
 	"play_start_new": "Start a new quiz",
 	"play_recovered_banner": "A previous game's score ({score} pts) was submitted.",
 	"play_default_friend_nickname": "A friend",
-
 	"announce_clip_ended": "Clip ended",
 	"announce_clip_playing": "Clip playing",
 	"announce_attempt_correct": "{label} correct",
@@ -103,11 +97,8 @@
 	"announce_reveal": "Reveal: {title} by {artists}",
 	"announce_scoreboard": "Round {index} of {total}. Score so far: {score}.",
 	"announce_summary": "Quiz complete. Score: {score}.",
-
 	"play_audio_unlock_failed": "Could not enable audio on this device.",
-
 	"title_play": "Devinyl — Play",
-
 	"preload_eyebrow_loading": "Cueing up",
 	"preload_heading_loading": "Loading your quiz…",
 	"preload_status_loaded": "Loaded {settled} of {total} clips",
@@ -125,26 +116,21 @@
 	"preload_confirm_notice": "This quiz is large or your connection looks slow: about {mb} MB, roughly {seconds} s to download.",
 	"preload_button_download": "Download and start",
 	"preload_button_start": "Start quiz",
-
 	"text_answer_locked": "Locked in",
 	"text_answer_rejected": "Not that one",
 	"text_answer_hint": "Press Enter to lock in",
-
 	"choice_answer_locked": "Locked in",
 	"choice_answer_wrong_locked": "Not that one — locked in",
 	"choice_answer_penalized": "Not that one — try again in {seconds}s",
-
 	"reveal_heading": "Reveal",
 	"reveal_skipped_note": "This clip couldn't be played — the round was skipped, not scored.",
 	"reveal_cover_alt": "Cover art for {title}",
 	"reveal_outcome_correct": "correct, +{points} pts",
 	"reveal_outcome_missed": "not answered",
 	"reveal_next": "Next",
-
 	"board_loading": "Loading the board…",
 	"board_heading": "Board",
 	"board_self_row": "You: #{rank} · {score} pts",
-
 	"title_stats": "Devinyl — Your stats",
 	"stats_heading": "Your stats",
 	"stats_signin_prompt": "Sign in",
@@ -159,7 +145,6 @@
 	"stats_mode_breakdown": "Speed: {speed} · Untimed: {fixed}",
 	"stats_top_genres_heading": "Top genres",
 	"stats_top_decades_heading": "Top decades",
-
 	"title_login": "Sign in — Devinyl",
 	"login_heading": "Sign in",
 	"login_label_email": "Email",
@@ -168,7 +153,6 @@
 	"login_button_submit": "Sign in",
 	"login_switch_prompt": "No account yet?",
 	"login_switch_link": "Create one",
-
 	"title_signup": "Sign up — Devinyl",
 	"signup_heading": "Create an account",
 	"signup_label_email": "Email",
@@ -177,17 +161,19 @@
 	"signup_label_birth_year": "Birth year",
 	"signup_birth_year_hint": "You must be at least {age} to create an account.",
 	"signup_error_birth_year_required": "Enter your birth year.",
+	"signup_legal_before": "By creating an account, you accept the ",
+	"signup_legal_middle": " and the ",
+	"signup_legal_after": ".",
 	"signup_button_submitting": "Creating account…",
 	"signup_button_submit": "Create account",
 	"signup_switch_prompt": "Already have an account?",
 	"signup_switch_link": "Sign in",
-
 	"title_daily": "Devinyl — Daily",
 	"daily_eyebrow": "Devinyl #{day}",
 	"daily_heading": "Today's quiz",
 	"daily_already_played": "You've already posted a scored run today — this replay won't count again.",
 	"daily_loading": "Loading today's quiz…",
-
+	"daily_none_today": "No quiz today — check back tomorrow.",
 	"title_admin": "Devinyl — Admin",
 	"admin_heading": "Admin",
 	"admin_unauthorized": "Operator access required.",
@@ -204,9 +190,11 @@
 	"admin_guest_conversion": "Guest → account",
 	"admin_calendar_heading": "Daily calendar (next 14 days)",
 	"admin_calendar_gap": "gap, no quiz scheduled",
+	"admin_availability_heading": "Availability incidents",
+	"admin_availability_tracks": "{count} track(s) marked unavailable in the last 14 days — quizzes using them skip that round.",
+	"admin_availability_empty_days": "Upcoming daily slots with no quiz (a slot cleared by the re-check shows up here): {days}",
 	"admin_flagged_heading": "Flagged sessions",
 	"admin_flagged_empty": "Nothing flagged.",
-
 	"title_challenge_lobby": "Devinyl — {name} challenges you",
 	"challenge_lobby_description": "{name} scored {score} pts on Devinyl. Beat it?",
 	"challenge_lobby_og_title": "{name} challenges you on Devinyl",
@@ -215,7 +203,6 @@
 	"challenge_lobby_heading": "{name} challenges you",
 	"challenge_lobby_score_to_beat": "Score to beat:",
 	"challenge_lobby_rounds": "{count} rounds",
-
 	"title_invite": "Devinyl — {name} invites you",
 	"invite_description": "{name} wants to be friends on Devinyl.",
 	"invite_og_title": "{name} invites you to Devinyl",
@@ -230,18 +217,15 @@
 	"invite_button_add": "Add as friend",
 	"invite_error": "Something went wrong — try again.",
 	"invite_go_to_devinyl": "Go to Devinyl",
-
 	"title_quiz_lobby": "Devinyl — {name}",
 	"quiz_lobby_description": "A {count}-round Devinyl quiz. Guess the song, race the clock.",
 	"quiz_lobby_og_description": "A {count}-round Devinyl quiz.",
 	"quiz_lobby_eyebrow": "Quiz · {count} rounds",
-
 	"auth_error_display_name_length": "Display name must be between {min} and {max} characters.",
 	"auth_error_display_name_blocked": "That name isn't available. Please choose a different one.",
 	"auth_error_display_name_taken": "That name is taken. Please choose a different one.",
 	"auth_error_display_name_taken_suggestion": "That name is taken. Try \"{suggestion}\"?",
 	"auth_error_age_gate": "You must be at least {age} years old to create an account.",
-
 	"title_complete_profile": "Devinyl — Complete your profile",
 	"complete_profile_heading": "One more thing",
 	"complete_profile_intro": "Google doesn't tell us your birth year, and we need it to confirm you're old enough to play.",
@@ -250,7 +234,6 @@
 	"complete_profile_birth_year_hint": "You must be at least {age} to use Devinyl.",
 	"complete_profile_button_submitting": "Saving…",
 	"complete_profile_button_submit": "Continue",
-
 	"auth_or_divider": "or",
 	"auth_continue_with_google": "Continue with Google"
 }

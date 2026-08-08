@@ -1,6 +1,5 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-
 	"nav_primary_label": "Navigation principale",
 	"nav_daily": "Quiz du jour",
 	"nav_stats": "Statistiques",
@@ -8,7 +7,8 @@
 	"nav_sign_in": "Se connecter",
 	"nav_language_label": "Langue",
 	"footer_tagline": "Devinyl — un blind test du répertoire francophone.",
-
+	"footer_terms": "Conditions d'utilisation",
+	"footer_privacy": "Politique de confidentialité",
 	"home_eyebrow": "Répertoire francophone · Blind test",
 	"home_h1_line1": "Devine le titre",
 	"home_h1_line2": "avant la fin de l'extrait.",
@@ -40,7 +40,6 @@
 	"home_error_network": "Erreur réseau.",
 	"home_button_generating": "Génération…",
 	"home_button_generate": "Générer le quiz",
-
 	"api_error_bad_request": "Cette requête n'est pas valide — vérifie le formulaire et réessaie.",
 	"api_error_unauthorized": "Connecte-toi pour faire ça.",
 	"api_error_forbidden": "Tu n'as pas la permission de faire ça.",
@@ -51,11 +50,9 @@
 	"api_error_unavailable": "Pas disponible pour le moment — essaie d'autres filtres.",
 	"api_error_network": "Erreur réseau — vérifie ta connexion et réessaie.",
 	"api_error_internal": "Une erreur est survenue. Réessaie.",
-
 	"nickname_label": "Pseudo",
 	"nickname_error": "Choisis un pseudo entre 2 et 24 caractères (lettres, chiffres, espaces, - . ' uniquement).",
 	"nickname_continue": "Continuer",
-
 	"share_daily_text": "Devinyl #{day} — {score} pts",
 	"share_challenge_text": "{name} a marqué {score} pts sur Devinyl. À toi de faire mieux ?",
 	"daily_share_button": "Partager le résultat",
@@ -65,14 +62,12 @@
 	"challenge_share_retry": "Réessayer",
 	"challenge_share_link_button": "Partager le lien de défi",
 	"challenge_share_link_label": "Lien de défi",
-
 	"common_retry": "Réessayer",
 	"common_continue": "Continuer",
 	"common_dismiss": "Ignorer",
 	"common_label_title": "Titre",
 	"common_label_artist": "Artiste",
 	"common_loading": "Chargement…",
-
 	"play_session_error_heading": "Impossible de démarrer ce quiz",
 	"play_preparing": "Préparation du quiz…",
 	"play_round_heading": "Manche {index} sur {total}",
@@ -95,7 +90,6 @@
 	"play_start_new": "Démarrer un nouveau quiz",
 	"play_recovered_banner": "Le score d'une partie précédente ({score} pts) a été envoyé.",
 	"play_default_friend_nickname": "Un ami",
-
 	"announce_clip_ended": "Extrait terminé",
 	"announce_clip_playing": "Extrait en cours",
 	"announce_attempt_correct": "{label} correct",
@@ -103,11 +97,8 @@
 	"announce_reveal": "Réponse : {title} par {artists}",
 	"announce_scoreboard": "Manche {index} sur {total}. Score jusqu'ici : {score}.",
 	"announce_summary": "Quiz terminé. Score : {score}.",
-
 	"play_audio_unlock_failed": "Impossible d'activer le son sur cet appareil.",
-
 	"title_play": "Devinyl — Jouer",
-
 	"preload_eyebrow_loading": "Préparation",
 	"preload_heading_loading": "Chargement du quiz…",
 	"preload_status_loaded": "{settled} extraits chargés sur {total}",
@@ -125,26 +116,21 @@
 	"preload_confirm_notice": "Ce quiz est volumineux ou ta connexion semble lente : environ {mb} Mo, à peu près {seconds} s de téléchargement.",
 	"preload_button_download": "Télécharger et commencer",
 	"preload_button_start": "Démarrer le quiz",
-
 	"text_answer_locked": "Validé",
 	"text_answer_rejected": "Ce n'est pas ça",
 	"text_answer_hint": "Appuie sur Entrée pour valider",
-
 	"choice_answer_locked": "Validé",
 	"choice_answer_wrong_locked": "Ce n'est pas ça — validé",
 	"choice_answer_penalized": "Ce n'est pas ça — réessaie dans {seconds}s",
-
 	"reveal_heading": "Réponse",
 	"reveal_skipped_note": "Cet extrait n'a pas pu être joué — la manche a été passée, non notée.",
 	"reveal_cover_alt": "Pochette de {title}",
 	"reveal_outcome_correct": "correct, +{points} pts",
 	"reveal_outcome_missed": "sans réponse",
 	"reveal_next": "Suivant",
-
 	"board_loading": "Chargement du classement…",
 	"board_heading": "Classement",
 	"board_self_row": "Toi : #{rank} · {score} pts",
-
 	"title_stats": "Devinyl — Tes statistiques",
 	"stats_heading": "Tes statistiques",
 	"stats_signin_prompt": "Connecte-toi",
@@ -159,7 +145,6 @@
 	"stats_mode_breakdown": "Chrono : {speed} · Sans chrono : {fixed}",
 	"stats_top_genres_heading": "Genres les plus joués",
 	"stats_top_decades_heading": "Décennies les plus jouées",
-
 	"title_login": "Connexion — Devinyl",
 	"login_heading": "Se connecter",
 	"login_label_email": "Email",
@@ -168,7 +153,6 @@
 	"login_button_submit": "Se connecter",
 	"login_switch_prompt": "Pas encore de compte ?",
 	"login_switch_link": "Créer un compte",
-
 	"title_signup": "Inscription — Devinyl",
 	"signup_heading": "Créer un compte",
 	"signup_label_email": "Email",
@@ -177,17 +161,19 @@
 	"signup_label_birth_year": "Année de naissance",
 	"signup_birth_year_hint": "Tu dois avoir au moins {age} ans pour créer un compte.",
 	"signup_error_birth_year_required": "Indique ton année de naissance.",
+	"signup_legal_before": "En créant un compte, tu acceptes les ",
+	"signup_legal_middle": " et la ",
+	"signup_legal_after": ".",
 	"signup_button_submitting": "Création du compte…",
 	"signup_button_submit": "Créer le compte",
 	"signup_switch_prompt": "Déjà un compte ?",
 	"signup_switch_link": "Se connecter",
-
 	"title_daily": "Devinyl — Quiz du jour",
 	"daily_eyebrow": "Devinyl #{day}",
 	"daily_heading": "Le quiz du jour",
 	"daily_already_played": "Tu as déjà envoyé une partie notée aujourd'hui — cette rediffusion ne comptera pas.",
 	"daily_loading": "Chargement du quiz du jour…",
-
+	"daily_none_today": "Pas de quiz aujourd'hui — reviens demain.",
 	"title_admin": "Devinyl — Administration",
 	"admin_heading": "Administration",
 	"admin_unauthorized": "Accès opérateur requis.",
@@ -204,9 +190,11 @@
 	"admin_guest_conversion": "Invité → compte",
 	"admin_calendar_heading": "Calendrier des quiz du jour (14 prochains jours)",
 	"admin_calendar_gap": "trou, aucun quiz programmé",
+	"admin_availability_heading": "Incidents de disponibilité",
+	"admin_availability_tracks": "{count} titre(s) marqué(s) indisponible(s) ces 14 derniers jours — les quiz concernés sautent la manche.",
+	"admin_availability_empty_days": "Créneaux du quiz du jour à venir sans quiz (un créneau annulé par la revérification apparaît ici) : {days}",
 	"admin_flagged_heading": "Parties signalées",
 	"admin_flagged_empty": "Rien à signaler.",
-
 	"title_challenge_lobby": "Devinyl — {name} te défie",
 	"challenge_lobby_description": "{name} a marqué {score} pts sur Devinyl. À toi de faire mieux ?",
 	"challenge_lobby_og_title": "{name} te défie sur Devinyl",
@@ -215,7 +203,6 @@
 	"challenge_lobby_heading": "{name} te défie",
 	"challenge_lobby_score_to_beat": "Score à battre :",
 	"challenge_lobby_rounds": "{count} manches",
-
 	"title_invite": "Devinyl — {name} t'invite",
 	"invite_description": "{name} veut devenir ami avec toi sur Devinyl.",
 	"invite_og_title": "{name} t'invite sur Devinyl",
@@ -230,18 +217,15 @@
 	"invite_button_add": "Ajouter comme ami",
 	"invite_error": "Une erreur est survenue — réessaie.",
 	"invite_go_to_devinyl": "Aller sur Devinyl",
-
 	"title_quiz_lobby": "Devinyl — {name}",
 	"quiz_lobby_description": "Un quiz Devinyl de {count} manches. Devine le titre, cours contre le chrono.",
 	"quiz_lobby_og_description": "Un quiz Devinyl de {count} manches.",
 	"quiz_lobby_eyebrow": "Quiz · {count} manches",
-
 	"auth_error_display_name_length": "Le pseudo doit faire entre {min} et {max} caractères.",
 	"auth_error_display_name_blocked": "Ce pseudo n'est pas disponible. Choisis-en un autre.",
 	"auth_error_display_name_taken": "Ce pseudo est déjà pris. Choisis-en un autre.",
 	"auth_error_display_name_taken_suggestion": "Ce pseudo est déjà pris. Essaie « {suggestion} » ?",
 	"auth_error_age_gate": "Tu dois avoir au moins {age} ans pour créer un compte.",
-
 	"title_complete_profile": "Devinyl — Complète ton profil",
 	"complete_profile_heading": "Encore une chose",
 	"complete_profile_intro": "Google ne nous transmet pas ton année de naissance, et on en a besoin pour confirmer que tu as l'âge requis.",
@@ -250,7 +234,6 @@
 	"complete_profile_birth_year_hint": "Tu dois avoir au moins {age} ans pour utiliser Devinyl.",
 	"complete_profile_button_submitting": "Enregistrement…",
 	"complete_profile_button_submit": "Continuer",
-
 	"auth_or_divider": "ou",
 	"auth_continue_with_google": "Continuer avec Google"
 }
