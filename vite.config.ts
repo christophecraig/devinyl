@@ -23,7 +23,30 @@ export default defineConfig({
 			// config it reads, so it gets a build-only config of its own. The real
 			// deploy config (wrangler.jsonc) points `main` at worker/entry.ts, which
 			// wraps that artifact to add the `scheduled` export for Cron Triggers.
-			adapter: adapter({ config: 'wrangler.build.jsonc' })
+			adapter: adapter({ config: 'wrangler.build.jsonc' }),
+			// Strict CSP (§16, task 4.6): everything self-hosted except the two
+			// Deezer CDN surfaces the product is built on — preview MP3s are
+			// fetch()ed to ArrayBuffers (connect-src, not media-src: there is no
+			// <audio> element by design, ROUND-2) and cover art is hot-loaded from
+			// the provider at render time (img-src; never proxied or stored,
+			// ADR-0001/§G-18). `unsafe-inline` styles cover Svelte's style:
+			// directives and the clip timer's width/left attribute styles —
+			// scripts stay nonce'd/hashed by SvelteKit (mode auto), which is the
+			// part of inline-CSP that actually defends against XSS. Zero
+			// third-party script origins, which is what keeps LEGAL-2 pristine.
+			csp: {
+				mode: 'auto',
+				directives: {
+					'default-src': ['self'],
+					'script-src': ['self'],
+					'style-src': ['self', 'unsafe-inline'],
+					'connect-src': ['self', 'https://*.dzcdn.net'],
+					'img-src': ['self', 'https://*.dzcdn.net'],
+					'base-uri': ['self'],
+					'object-src': ['none'],
+					'frame-ancestors': ['self']
+				}
+			}
 		})
 	],
 	test: {

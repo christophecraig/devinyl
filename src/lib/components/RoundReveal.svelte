@@ -86,6 +86,10 @@
 					&middot; {pack.reveal.releaseYear}
 				{/if}
 			</p>
+			<!-- §5.2 attribution condition (task 4.6). Deliberately not routed
+			     through Paraglide: it's Deezer's brand phrase, kept verbatim in
+			     every locale like the track metadata around it (LOC-2). -->
+			<p class="attribution">Powered by Deezer</p>
 		</div>
 	</div>
 
@@ -207,6 +211,14 @@
 	.album {
 		margin: var(--space-1) 0 0;
 		font-size: var(--text-small);
+		color: var(--ink-muted);
+	}
+
+	.attribution {
+		margin: var(--space-2) 0 0;
+		font-size: var(--text-micro);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		color: var(--ink-muted);
 	}
 
