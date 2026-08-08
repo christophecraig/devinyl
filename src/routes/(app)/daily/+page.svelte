@@ -45,10 +45,21 @@
 
 {#if error}
 	<main class="sheet">
-		<p class="error-note">{localizeApiErrorCode(error.code)}</p>
+		<h1>{m.daily_heading()}</h1>
+		{#if error.code === 'not_found'}
+			<!-- Not an error state: `GET /api/daily` 404s a day with no scheduled
+			     quiz, and that is a state the product produces on its own — task
+			     4.2's availability job *clears* an upcoming daily slot when one of
+			     its tracks is taken down. Showing the generic error string here
+			     would read as a fault when the honest answer is "nothing today". -->
+			<p class="waiting">{m.daily_none_today()}</p>
+		{:else}
+			<p class="error-note">{localizeApiErrorCode(error.code)}</p>
+		{/if}
 	</main>
 {:else if !daily}
 	<main class="sheet">
+		<h1>{m.daily_heading()}</h1>
 		<p class="waiting">{m.daily_loading()}</p>
 	</main>
 {:else}
