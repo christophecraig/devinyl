@@ -139,6 +139,16 @@
 			<button class="primary start" type="submit" disabled={submitting}>
 				{submitting ? m.signup_button_submitting() : m.signup_button_submit()}
 			</button>
+
+			<!-- LEGAL-3 (task 4.5): consent sentence assembled from three
+			     fragments around the two links because Paraglide messages are
+			     plain strings — the fragments carry the FR/EN article
+			     differences ("les … et la …"). -->
+			<p class="legal-notice">
+				{m.signup_legal_before()}<a href={resolve('/(app)/legal/terms')}>{m.footer_terms()}</a
+				>{m.signup_legal_middle()}<a href={resolve('/(app)/legal/privacy')}>{m.footer_privacy()}</a
+				>{m.signup_legal_after()}
+			</p>
 		</form>
 
 		{#if data.googleEnabled}
@@ -222,6 +232,12 @@
 
 	.switch {
 		margin: 0;
+		font-size: var(--text-small);
+		color: var(--ink-muted);
+	}
+
+	.legal-notice {
+		margin: var(--space-2) 0 0;
 		font-size: var(--text-small);
 		color: var(--ink-muted);
 	}

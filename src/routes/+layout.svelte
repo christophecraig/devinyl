@@ -65,6 +65,13 @@
 
 	<footer class="colophon">
 		<p>{m.footer_tagline()}</p>
+		<p class="colophon-links">
+			<a href={resolve('/(app)/legal/terms')}>{m.footer_terms()}</a>
+			<a href={resolve('/(app)/legal/privacy')}>{m.footer_privacy()}</a>
+			<!-- §5.2 attribution condition (task 4.6); Deezer's phrase stays
+			     verbatim in every locale, like the reveal card's (LOC-2). -->
+			<span class="attribution">Powered by Deezer</span>
+		</p>
 	</footer>
 </div>
 
@@ -169,5 +176,19 @@
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: var(--ink-faint);
+	}
+
+	.colophon-links {
+		margin-top: var(--space-2);
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--space-2) var(--space-4);
+	}
+
+	/* --ink-muted rather than the tagline's --ink-faint: these are
+	   interactive, so they carry the AA bar for text, not decoration. */
+	.colophon-links a {
+		color: var(--ink-muted);
 	}
 </style>
