@@ -164,7 +164,10 @@ describe('runJobs', () => {
 	it('resolves without throwing for every declared kind', async () => {
 		const { db } = createFakeDb();
 		vi.mocked(getDb).mockReturnValue(db as never);
-		const fakePlatform = {} as App.Platform;
+		// `env` is present but empty: the daily batch reads `RESEND_API_KEY` off
+		// it (absent ⇒ `sendEmail` logs instead of sending), and a platform
+		// without an `env` at all is not a shape the worker ever hands `runJobs`.
+		const fakePlatform = { env: {} } as unknown as App.Platform;
 
 		await expect(runJobs('every-15-min', fakePlatform)).resolves.toBeUndefined();
 		await expect(runJobs('hourly', fakePlatform)).resolves.toBeUndefined();

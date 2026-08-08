@@ -2,8 +2,10 @@
  * Single entry point cron triggers are meant to dispatch into (plan
  * deviation table: "In-process setInterval jobs" -> "Cron Triggers", same
  * job code behind one runJobs(kind) entry). Job bodies land in Phase 1
- * (1.17) and later phases (3.1, 3.8, 3.11, 4.2) — the `every-15-min` batch
- * is implemented here; `daily` is still a stub.
+ * (1.17) and later phases (3.1, 3.8, 3.11, 4.2); all three batches are
+ * implemented here. The availability re-check (4.2) lives in `./availability.ts`
+ * rather than inline — it is the only job here that talks to the catalog
+ * provider and the operator alert channel.
  *
  * Every job in a batch is failure-isolated (`runOne` below): one throwing
  * job must not stop the others from running, and every job is bounded by
@@ -29,6 +31,8 @@ import {
 	rateLimit,
 	user
 } from '../db/schema.js';
+import { getProvider } from '../catalog/index.js';
+import { isUserQuizRecheckDay, runAvailabilityRecheck } from './availability.js';
 import { checkDailyPublicationGap } from '../daily.js';
 import { snapshotWeeklyRanks } from '../weekly.js';
 import { aggregateMetricsDaily } from '../metrics.js';
@@ -295,7 +299,31 @@ export async function runJobs(kind: JobKind, platform: App.Platform): Promise<vo
 			const now = Date.now();
 			const yesterday = parisDayOffset(now, -1);
 
+			// §5.3: the official/daily pass runs every night; the user-quiz pass is
+			// weekly. §15 fixes three cron schedules and a fourth is out of scope
+			// (4.2), so "weekly" is a day-of-week gate here rather than its own
+			// trigger — `wrangler.jsonc` is untouched.
+			const provider = getProvider(platform);
+			// Read structurally rather than off `Env`: `RESEND_API_KEY` is a
+			// deploy-time secret, so `wrangler types` only emits it when a local
+			// `.dev.vars` happens to define it. Same reason `auth.ts` declares its
+			// own `AuthEnv` instead of consuming the generated `Env` directly.
+			const { RESEND_API_KEY: resendApiKey } = platform.env as Partial<{
+				RESEND_API_KEY: string;
+			}>;
+			const availabilityDeps = { db, provider, now, resendApiKey };
+
 			const results = [
+				await runOne('availability-recheck-official', async () => {
+					const result = await runAvailabilityRecheck({ ...availabilityDeps, scope: 'official' });
+					return result.checked;
+				}),
+				await runOne('availability-recheck-user', async () => {
+					if (!isUserQuizRecheckDay(now)) return 0;
+					const result = await runAvailabilityRecheck({ ...availabilityDeps, scope: 'user' });
+					return result.checked;
+				}),
+				// After the re-check, so a slot cleared above is seen as the gap it now is.
 				await runOne('check-daily-publication-gap', async () => {
 					const { ok } = await checkDailyPublicationGap(db, now);
 					return ok ? 1 : 0;
@@ -305,7 +333,6 @@ export async function runJobs(kind: JobKind, platform: App.Platform): Promise<vo
 					await aggregateMetricsDaily(db, yesterday, now);
 					return 1;
 				})
-				// TODO(4.2): availability re-check job for official/daily quizzes.
 			];
 
 			report(kind, results);

@@ -31,11 +31,17 @@
 		day: string;
 		metrics: Record<string, number>;
 	}
+	/** §5.3/4.2 — derived from `track_cache.unavailable_at` + calendar gaps, no incident table. */
+	interface AvailabilityIncidents {
+		tracks: { id: string; title: string; unavailableAt: number }[];
+		emptyUpcomingDays: string[];
+	}
 
 	let authorized = $state<boolean | null>(null);
 	let calendar = $state<DailyCalendarEntry[]>([]);
 	let flagged = $state<FlaggedSession[]>([]);
 	let series = $state<MetricsDay[]>([]);
+	let incidents = $state<AvailabilityIncidents>({ tracks: [], emptyUpcomingDays: [] });
 
 	async function fetchJson<T>(path: string): Promise<T> {
 		const res = await fetch(path);
@@ -45,14 +51,16 @@
 
 	onMount(async () => {
 		try {
-			const [dailyRes, flaggedRes, metricsRes] = await Promise.all([
+			const [dailyRes, flaggedRes, metricsRes, availabilityRes] = await Promise.all([
 				fetchJson<{ calendar: DailyCalendarEntry[] }>('/api/admin/daily'),
 				fetchJson<{ sessions: FlaggedSession[] }>('/api/admin/flagged-sessions'),
-				fetchJson<{ series: MetricsDay[] }>('/api/admin/metrics?days=30')
+				fetchJson<{ series: MetricsDay[] }>('/api/admin/metrics?days=30'),
+				fetchJson<{ incidents: AvailabilityIncidents }>('/api/admin/availability')
 			]);
 			calendar = dailyRes.calendar;
 			flagged = flaggedRes.sessions;
 			series = metricsRes.series;
+			incidents = availabilityRes.incidents;
 			authorized = true;
 		} catch {
 			authorized = false;
@@ -67,6 +75,10 @@
 	const d7ReturnTotal = $derived(sum('d7_return'));
 	const d7Rate = $derived(
 		d7CohortTotal > 0 ? Math.round((100 * d7ReturnTotal) / d7CohortTotal) : null
+	);
+
+	const hasIncidents = $derived(
+		incidents.tracks.length > 0 || incidents.emptyUpcomingDays.length > 0
 	);
 
 	const STREAK_BUCKETS = ['0', '1', '2', '3', '4', '5plus'] as const;
@@ -103,6 +115,25 @@
 	{:else if authorized === false}
 		<p class="error-note">{m.admin_unauthorized()}</p>
 	{:else}
+		{#if hasIncidents}
+			<aside class="alert-banner" role="status">
+				<h2>{m.admin_availability_heading()}</h2>
+				{#if incidents.tracks.length > 0}
+					<p>{m.admin_availability_tracks({ count: incidents.tracks.length })}</p>
+					<ul class="rank-list">
+						{#each incidents.tracks as track (track.id)}
+							<li>{track.title} · {track.id}</li>
+						{/each}
+					</ul>
+				{/if}
+				{#if incidents.emptyUpcomingDays.length > 0}
+					<p>
+						{m.admin_availability_empty_days({ days: incidents.emptyUpcomingDays.join(', ') })}
+					</p>
+				{/if}
+			</aside>
+		{/if}
+
 		<section>
 			<h2>{m.admin_met2_heading()}</h2>
 			<div class="stat-grid">
@@ -191,6 +222,20 @@
 
 	.waiting {
 		color: var(--ink-muted);
+	}
+
+	.alert-banner {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		padding: var(--space-3);
+		background: var(--negative-soft);
+		border-left: 3px solid var(--negative);
+		border-radius: var(--radius-sm);
+	}
+
+	.alert-banner p {
+		margin: 0;
 	}
 
 	.error-note {

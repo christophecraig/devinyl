@@ -4,10 +4,10 @@
  * nothing in this module re-checks the role itself.
  */
 
-import { and, desc, eq, gt, isNotNull, isNull, lt } from 'drizzle-orm';
+import { and, desc, eq, gt, gte, isNotNull, isNull, lt } from 'drizzle-orm';
 import type { PublishOfficialBody } from '$lib/game/schemas.js';
 import type { Db } from '../db/index.js';
-import { dailyQuiz, gameSession, quiz } from '../db/schema.js';
+import { dailyQuiz, gameSession, quiz, trackCache } from '../db/schema.js';
 import { apiError } from '../http.js';
 import { parisDayOffset } from '../time.js';
 
@@ -137,6 +137,59 @@ export async function getDailyCalendar(
 		calendar.push(found ?? { day, quizId: null, quizName: null, dayNumber: null });
 	}
 	return calendar;
+}
+
+// ---------------------------------------------------------------------------
+// Availability incidents (§5.3 / §G-5 — the `/admin` half of the operator alert)
+// ---------------------------------------------------------------------------
+
+export interface AvailabilityIncidents {
+	/** Tracks the re-check job stamped `unavailable_at` on inside the window, newest first. */
+	tracks: { id: string; title: string; unavailableAt: number }[];
+	/** Upcoming daily days with no quiz — including any slot the job just disqualified. */
+	emptyUpcomingDays: string[];
+}
+
+/**
+ * The `/admin` availability banner's data, **derived entirely from columns that
+ * already exist** (task 4.2 rules out a migration): `track_cache.unavailable_at`
+ * for the takedowns, and the gaps `getDailyCalendar` already computes for the
+ * disqualified slots.
+ *
+ * That derivation is what makes the banner correct without an incident table:
+ * clearing a daily slot *is* creating a gap, and stamping `unavailable_at` *is*
+ * recording a takedown — so the banner reads the effects rather than a
+ * parallel log that could drift from them. The cost is that the banner can't
+ * distinguish "the job disqualified this day" from "the operator never
+ * scheduled it", which is the same thing to whoever has to fix it.
+ */
+export async function listAvailabilityIncidents(
+	db: Db,
+	opts: { now?: number; windowDays?: number; lookaheadDays?: number; limit?: number } = {}
+): Promise<AvailabilityIncidents> {
+	const now = opts.now ?? Date.now();
+	const windowDays = opts.windowDays ?? 14;
+	const cutoff = now - windowDays * 24 * 60 * 60 * 1000;
+
+	const tracks = await db
+		.select({
+			id: trackCache.id,
+			title: trackCache.title,
+			unavailableAt: trackCache.unavailableAt
+		})
+		.from(trackCache)
+		.where(and(isNotNull(trackCache.unavailableAt), gte(trackCache.unavailableAt, cutoff)))
+		.orderBy(desc(trackCache.unavailableAt))
+		.limit(opts.limit ?? 50);
+
+	const calendar = await getDailyCalendar(db, { now, lookaheadDays: opts.lookaheadDays });
+
+	return {
+		// `unavailableAt` is nullable in the column type but never null here — the
+		// `isNotNull` filter above is what guarantees it.
+		tracks: tracks.map((t) => ({ ...t, unavailableAt: t.unavailableAt as number })),
+		emptyUpcomingDays: calendar.filter((entry) => entry.quizId === null).map((entry) => entry.day)
+	};
 }
 
 // ---------------------------------------------------------------------------
